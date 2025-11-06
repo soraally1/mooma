@@ -15,7 +15,7 @@ export default function Navbar() {
                         className="h-10 w-auto cursor-pointer"
                     />
                 </Link>
-                <Link href="/login">
+                <Link href="/pages/login">
                     <button className="bg-pink-100 hover:bg-pink-200 text-[#E26884] px-6 py-2 rounded-lg font-medium transition-colors">
                         Login
                     </button>

@@ -1,5 +1,4 @@
-import Image from "next/image";
-import Navbar from "@/components/navbar";
+import Navbar from "@/app/components/navbar";
 import Link from "next/link";
 
 export default function LandingPage() {
@@ -17,7 +16,7 @@ export default function LandingPage() {
           Haii bunda, yuk jaga perjalanan kehamilanmu dengan informasi terpercaya, tips kesehatan, dan dukungan yang kamu butuhkan. Mooma hadir untuk membantu setiap langkahmu menuju momen bahagia bersama buah hati.
         </p>
 
-        <Link href="/signup">
+        <Link href="/pages/signup">
           <button className="bg-[#E26884] hover:bg-[#D15570] text-white px-10 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg">
             Daftar Sekarang!
           </button>

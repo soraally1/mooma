@@ -1,4 +1,4 @@
-import Navbar from "../components/navbar";
+import Navbar from "../../components/navbar";
 import Link from "next/link";
 
 export default function Login() {
@@ -62,7 +62,7 @@ export default function Login() {
 
             <p className="text-center text-[#E26884] mt-6">
               Belum punya akun?{" "}
-              <Link href="/signup" className="font-semibold hover:underline">
+              <Link href="/pages/signup" className="font-semibold hover:underline">
                 Daftar di sini
               </Link>
             </p>
@@ -70,20 +70,7 @@ export default function Login() {
         </div>
       </main>
 
-      {/* Wave Pattern */}
-      <div className="absolute bottom-0 left-0 right-0 w-full">
-        <svg viewBox="0 0 1440 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-          <path 
-            d="M0 150C240 50 480 100 720 150C960 200 1200 250 1440 150V400H0V150Z" 
-            fill="#E26884"
-          />
-          <path 
-            d="M0 200C240 300 480 250 720 200C960 150 1200 100 1440 200V400H0V200Z" 
-            fill="#D15570"
-            fillOpacity="0.8"
-          />
-        </svg>
-      </div>
+  
     </div>
   );
 }
