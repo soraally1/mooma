@@ -1,0 +1,118 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions for authentication and validation
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidUserData() {
+      return request.resource.data.keys().hasAll(['uid', 'email', 'name', 'provider', 'createdAt', 'lastLoginAt']) &&
+             request.resource.data.uid is string &&
+             request.resource.data.email is string &&
+             request.resource.data.name is string &&
+             request.resource.data.provider in ['email', 'google'] &&
+             request.resource.data.createdAt is timestamp &&
+             request.resource.data.lastLoginAt is timestamp &&
+             request.resource.data.uid == request.auth.uid &&
+             request.resource.data.email == request.auth.token.email;
+    }
+    
+    function isValidUserUpdate() {
+      // Only allow updates to lastLoginAt and encryptedData fields
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt', 'encryptedData']) &&
+             request.resource.data.lastLoginAt is timestamp;
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Allow read if user is authenticated and accessing their own document
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      // Allow create if user is authenticated, creating their own document, and data is valid
+      allow create: if isAuthenticated() && 
+                   isOwner(userId) && 
+                   isValidUserData();
+      
+      // Allow update if user is authenticated, updating their own document, and update is valid
+      allow update: if isAuthenticated() && 
+                   isOwner(userId) && 
+                   isValidUserUpdate();
+      
+      // Prevent deletion of user documents
+      allow delete: if false;
+    }
+    
+    // Pregnancy tracking collection (example for future features)
+    match /pregnancies/{pregnancyId} {
+      allow read, write: if isAuthenticated() && 
+                        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Articles collection (public read, admin write)
+    match /articles/{articleId} {
+      allow read: if true; // Public read access
+      allow write: if false; // Only admin can write (handle via admin SDK)
+    }
+    
+    // User sessions/tokens (for remember me functionality)
+    match /userSessions/{sessionId} {
+      allow read, write: if isAuthenticated() && 
+                        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Chat/Community messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                   request.resource.data.authorId == request.auth.uid &&
+                   request.resource.data.createdAt == request.time;
+      allow update: if isAuthenticated() && 
+                   resource.data.authorId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                   resource.data.authorId == request.auth.uid;
+    }
+    
+    // User preferences/settings
+    match /userPreferences/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() && 
+                   isOwner(userId) && 
+                   request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Medical records (highly sensitive)
+    match /medicalRecords/{recordId} {
+      allow read, write: if isAuthenticated() && 
+                        resource.data.userId == request.auth.uid &&
+                        // Additional security: check if user has verified email
+                        request.auth.token.email_verified == true;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid &&
+                   request.auth.token.email_verified == true;
+    }
+    
+    // Appointment scheduling
+    match /appointments/{appointmentId} {
+      allow read, write: if isAuthenticated() && 
+                        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid &&
+                   request.resource.data.createdAt == request.time;
+    }
+    
+    // Default deny all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
