@@ -1,47 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=Schoolbell&display=swap');
 @import "tailwindcss";
 
 :root {
-  --font-urbanist: 'Urbanist', sans-serif;
-  --font-schoolbell: 'Schoolbell', cursive;
   --background: #ffffff;
   --foreground: #171717;
-  
-  /*  Cream Palette */
-  --color-cream-light: #fffefc;
-  --color-cream-light-hover: #fffefb;
-  --color-cream-light-active: #fffef7;
-  --color-cream-normal: #fff5e4;
-  --color-cream-normal-hover: #e6dcdc;
-  --color-cream-normal-active: #ccc4b6;
-  --color-cream-dark: #bfb8ab;
-  --color-cream-dark-hover: #999389;
-  --color-cream-dark-active: #736e67;
-  --color-cream-darker: #595650;
-
-  /*  Pink Palette */
-  --color-pink-light: #fdf0f3;
-  --color-pink-light-hover: #fce9ec;
-  --color-pink-light-active: #fad1d9;
-  --color-pink-normal: #ee6983;
-  --color-pink-normal-hover: #d65f76;
-  --color-pink-normal-active: #be5469;
-  --color-pink-dark: #b34f62;
-  --color-pink-dark-hover: #8f434f;
-  --color-pink-dark-active: #6b2f3b;
-  --color-pink-darker: #53252e;
-
-  /* Red Palette */
-  --color-red-light: #f3e7eb;
-  --color-red-light-hover: #eddbe1;
-  --color-red-light-active: #d9b4c0;
-  --color-red-normal: #850e35;
-  --color-red-normal-hover: #780d30;
-  --color-red-normal-active: #6a0b2c;
-  --color-red-dark: #640b28;
-  --color-red-dark-hover: #500820;
-  --color-red-dark-active: #3c0618;
-  --color-red-darker: #2f0513;
 }
 
 @theme inline {
@@ -61,5 +22,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-urbanist);
+  font-family: Arial, Helvetica, sans-serif;
 }
