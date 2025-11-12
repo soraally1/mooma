@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 import Link from "next/link";
 import { useAuth } from "../../../lib/auth-context";
+import { AuthService } from "../../../lib/auth";
 import toast from "react-hot-toast";
 
 export default function Login() {
@@ -37,7 +38,16 @@ export default function Login() {
     try {
       await signIn(formData);
       toast.success('Login successful!');
-      router.push('/dashboard');
+      
+      // Check if user has completed their profile
+      const userData = await AuthService.getCurrentUserData();
+      if (userData && userData.currentWeek) {
+        // User has completed profile, go to homepage
+        router.push('/pages/homepage');
+      } else {
+        // User hasn't completed profile, go to moomainformasi
+        router.push('/pages/moomainformasi');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
     } finally {
@@ -50,7 +60,16 @@ export default function Login() {
     try {
       await signInWithGoogle();
       toast.success('Login successful!');
-      router.push('/dashboard');
+      
+      // Check if user has completed their profile
+      const userData = await AuthService.getCurrentUserData();
+      if (userData && userData.profileCompleted) {
+        // User has completed profile, go to homepage
+        router.push('/pages/homepage');
+      } else {
+        // User hasn't completed profile, go to moomainformasi
+        router.push('/pages/moomainformasi');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Google login failed');
     } finally {

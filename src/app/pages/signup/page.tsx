@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 import Link from "next/link";
 import { useAuth } from "../../../lib/auth-context";
+import { AuthService } from "../../../lib/auth";
 import toast from "react-hot-toast";
 
 export default function Signup() {
@@ -60,7 +61,9 @@ export default function Signup() {
     try {
       await signUp(formData);
       toast.success('Akun berhasil dibuat!');
-      router.push('/dashboard');
+      
+      // New user, redirect to moomainformasi to complete profile
+      router.push('/pages/moomainformasi');
     } catch (error: any) {
       toast.error(error.message || 'Gagal membuat akun');
     } finally {
@@ -71,9 +74,18 @@ export default function Signup() {
   const handleGoogleSignUp = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const result = await signInWithGoogle();
       toast.success('Akun berhasil dibuat!');
-      router.push('/dashboard');
+      
+      // Check if this is a new user
+      const userData = await AuthService.getCurrentUserData();
+      if (userData && userData.profileCompleted) {
+        // User already has profile, go to homepage
+        router.push('/pages/homepage');
+      } else {
+        // New user, go to moomainformasi to complete profile
+        router.push('/pages/moomainformasi');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Gagal daftar dengan Google');
     } finally {

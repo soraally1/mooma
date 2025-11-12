@@ -27,6 +27,15 @@ export interface UserData {
   createdAt: Date;
   lastLoginAt: Date;
   encryptedData?: string;
+  // Pregnancy health info
+  lastCheckupDate?: string;
+  currentWeek?: number;
+  weight?: number;
+  bloodPressure?: string;
+  bloodType?: string;
+  babyHeartRate?: number;
+  notes?: string;
+  profileCompleted?: boolean;
 }
 
 export interface SignupData {
@@ -243,6 +252,18 @@ export class AuthService {
     } catch (error) {
       console.error('Decrypt user data error:', error);
       return null;
+    }
+  }
+
+  /**
+   * Update user data in Firestore
+   */
+  static async updateUserData(uid: string, updates: Partial<UserData>): Promise<void> {
+    try {
+      await setDoc(doc(db, 'users', uid), updates, { merge: true });
+    } catch (error: any) {
+      console.error('Update user data error:', error);
+      throw new Error(error.message || 'Failed to update user data');
     }
   }
 }
