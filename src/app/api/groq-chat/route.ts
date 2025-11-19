@@ -9,6 +9,40 @@ interface Message {
 }
 
 interface PregnancyData {
+  // Data Pribadi & Antropometri
+  height?: number;
+  prePregnancyWeight?: number;
+  bloodType?: string;
+  drugAllergies?: string;
+  foodAllergies?: string;
+  
+  // Riwayat Kehamilan
+  lastMenstrualPeriod?: string;
+  estimatedDueDate?: string;
+  pregnancyWeek?: number;
+  gravidaParityAbortus?: string;
+  medicalHistory?: string;
+  previousPregnancyComplications?: string;
+  
+  // Informasi Kesehatan Saat Ini
+  currentMedications?: string;
+  currentHealthConditions?: string;
+  currentWeight?: number;
+  bloodPressure?: string;
+  exerciseFrequency?: string;
+  
+  // Monitoring Kesehatan Kehamilan
+  mood?: string;
+  complaints?: string;
+  currentBodyWeight?: number;
+  babyMovement?: string;
+  additionalNotes?: string;
+  
+  // Informasi Kontak Darurat
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  
+  // Metadata
   [key: string]: string | number | undefined;
 }
 
@@ -32,37 +66,93 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const SYSTEM_PROMPT = `Kamu adalah asisten AI yang membantu ibu hamil mengumpulkan informasi lengkap tentang kehamilannya. Nama kamu adalah Mooma Assistant.
 
-Tugasmu adalah:
-1. Mengajukan pertanyaan satu per satu tentang informasi kehamilan
-2. Mengekstrak data dari jawaban pengguna
-3. Menyimpan data yang relevan
-4. Memberikan respons yang hangat, suportif, dan profesional dalam bahasa Indonesia
+INSTRUKSI PENTING:
+1. Tanyakan SEMUA informasi yang diperlukan satu per satu dengan pertanyaan yang jelas dan spesifik
+2. Jangan langsung menyelesaikan percakapan setelah satu atau dua pertanyaan
+3. Lanjutkan bertanya sampai semua informasi terkumpul
+4. EKSTRAK DATA DARI SETIAP JAWABAN PENGGUNA DAN KEMBALIKAN DALAM FORMAT JSON
+5. Berikan respons yang hangat, suportif, dan profesional dalam bahasa Indonesia
 
-Informasi yang perlu dikumpulkan:
-- Hari pertama menstruasi terakhir (HPHT)
-- Tanggal perkiraan lahir
-- Trimester saat ini
-- Minggu kehamilan
-- Jumlah anak yang sudah dimiliki
-- Riwayat medis
-- Alergi
-- Obat-obatan yang sedang dikonsumsi
-- Kondisi kesehatan
-- Frekuensi olahraga
-- Preferensi diet
-- Kontak darurat
-- Nomor telepon kontak darurat
+DAFTAR LENGKAP INFORMASI YANG HARUS DIKUMPULKAN (dalam urutan):
 
-Setelah mengumpulkan semua informasi, berikan pesan penutup yang hangat dan konfirmasi bahwa data telah lengkap.
+A. DATA PRIBADI & ANTROPOMETRI:
+1. height (Tinggi badan dalam cm)
+2. prePregnancyWeight (Berat badan sebelum hamil dalam kg)
+3. bloodType (Golongan darah: A, B, AB, O)
+4. drugAllergies & foodAllergies (Alergi obat/makanan)
 
-PENTING: Berikan respons dalam format JSON dengan struktur berikut:
+B. RIWAYAT KEHAMILAN:
+5. lastMenstrualPeriod (HPHT - format DD-MM-YYYY)
+6. estimatedDueDate (HPL - akan dihitung otomatis 280 hari dari HPHT)
+7. pregnancyWeek (Usia kehamilan saat ini dalam minggu - akan dihitung otomatis)
+8. gravidaParityAbortus (Kehamilan ke berapa - G/P/A)
+9. medicalHistory (Riwayat penyakit)
+10. previousPregnancyComplications (Riwayat komplikasi kehamilan sebelumnya)
+
+C. INFORMASI KESEHATAN SAAT INI:
+11. currentMedications (Obat-obatan yang sedang dikonsumsi)
+12. currentHealthConditions (Kondisi kesehatan saat ini - tekanan darah, berat badan sekarang, dll)
+13. exerciseFrequency (Frekuensi olahraga per minggu)
+
+D. MONITORING KESEHATAN KEHAMILAN:
+14. mood (Mood/Suasana hati saat ini)
+15. complaints (Keluhan yang dirasakan)
+16. currentBodyWeight (Berat badan saat ini dalam kg)
+17. babyMovement (Gerakan bayi)
+18. additionalNotes (Catatan bebas/Informasi tambahan)
+
+TOTAL: 18 INFORMASI YANG HARUS DIKUMPULKAN
+
+STRATEGI PERCAKAPAN:
+- Setelah menerima jawaban, EKSTRAK informasi ke field yang sesuai dan tanyakan pertanyaan BERIKUTNYA
+- Jangan puas dengan jawaban singkat - minta penjelasan lebih detail jika diperlukan
+- Gunakan informasi sebelumnya untuk membuat pertanyaan lebih personal
+- Hitung sendiri tanggal perkiraan lahir jika diperlukan (280 hari dari HPHT)
+- Hitung usia kehamilan berdasarkan HPHT
+- Terus tanyakan sampai semua 18 informasi terkumpul
+- Untuk monitoring kesehatan (mood, keluhan, gerakan bayi), tanyakan dengan empati dan perhatian
+
+PENYELESAIAN:
+- Hanya tandai isComplete: true setelah SEMUA 18 informasi telah dikumpulkan
+- Berikan ringkasan data yang telah dikumpulkan dengan format yang rapi dan terorganisir
+- Ucapkan "Data telah lengkap" atau "Terima kasih telah memberikan semua informasi" untuk menandakan selesai
+- Sampaikan bahwa data akan disimpan dengan aman dan dapat diakses kapan saja
+
+FORMAT RESPONS (WAJIB JSON - SELALU GUNAKAN FORMAT INI):
 {
   "message": "pesan untuk pengguna",
-  "extractedData": { "field": "value" },
+  "extractedData": {
+    "height": nilai_atau_null,
+    "prePregnancyWeight": nilai_atau_null,
+    "bloodType": nilai_atau_null,
+    "drugAllergies": nilai_atau_null,
+    "foodAllergies": nilai_atau_null,
+    "lastMenstrualPeriod": nilai_atau_null,
+    "estimatedDueDate": nilai_atau_null,
+    "pregnancyWeek": nilai_atau_null,
+    "gravidaParityAbortus": nilai_atau_null,
+    "medicalHistory": nilai_atau_null,
+    "previousPregnancyComplications": nilai_atau_null,
+    "currentMedications": nilai_atau_null,
+    "currentHealthConditions": nilai_atau_null,
+    "exerciseFrequency": nilai_atau_null,
+    "mood": nilai_atau_null,
+    "complaints": nilai_atau_null,
+    "currentBodyWeight": nilai_atau_null,
+    "babyMovement": nilai_atau_null,
+    "additionalNotes": nilai_atau_null
+  },
   "isComplete": false
 }
 
-Hanya ekstrak data yang jelas dari jawaban pengguna. Jangan membuat data yang tidak ada.`;
+PENTING:
+- SELALU return JSON dengan SEMUA 18 field, gunakan null untuk field yang belum dikumpulkan
+- HANYA isi field yang telah diekstrak dari jawaban pengguna, field lainnya tetap null
+- Ketika semua 18 informasi sudah terkumpul, HARUS menyertakan frasa "Data telah lengkap" dalam pesan
+- Ekstrak HANYA data yang jelas dari jawaban pengguna
+- Jangan membuat atau mengasumsikan data yang tidak ada
+- Selalu tanyakan pertanyaan berikutnya di akhir pesan
+- Gunakan bahasa Indonesia yang hangat dan ramah`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -142,10 +232,24 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      // Try to extract JSON from the response
-      const jsonMatch = assistantMessage.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsedResponse = JSON.parse(jsonMatch[0]);
+      // Try to extract JSON from the response - look for the most complete JSON object
+      const jsonMatches = assistantMessage.match(/\{[\s\S]*?\n\}/g) || [];
+      
+      if (jsonMatches.length > 0) {
+        // Try each match, starting with the longest (most complete)
+        const sortedMatches = jsonMatches.sort((a: string, b: string) => b.length - a.length);
+        
+        for (const jsonStr of sortedMatches) {
+          try {
+            const parsed = JSON.parse(jsonStr);
+            if (parsed.message && parsed.extractedData) {
+              parsedResponse = parsed;
+              break;
+            }
+          } catch (e) {
+            // Continue to next match
+          }
+        }
       }
     } catch (parseError) {
       // If JSON parsing fails, use the raw message
@@ -153,13 +257,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if conversation should be marked as complete
+    // Only mark as complete if AI explicitly says all data is collected
     const completeKeywords = [
-      'lengkap',
-      'selesai',
-      'terima kasih',
-      'sempurna',
-      'berhasil',
+      'semua informasi telah lengkap',
       'data anda sudah lengkap',
+      'informasi lengkap telah dikumpulkan',
+      'percakapan selesai',
+      'data mooma telah tersimpan',
+      'terima kasih telah memberikan semua informasi',
+      'semua data telah terkumpul',
+      'data telah lengkap',
+      'informasi telah lengkap',
+      'pertanyaan selesai',
+      'data kehamilanmu berhasil disimpan',
+      'data anda telah tersimpan',
+      'terima kasih atas informasi lengkap',
     ];
 
     const isComplete = completeKeywords.some(keyword =>
@@ -169,34 +281,15 @@ export async function POST(request: NextRequest) {
     const extractedData = parsedResponse.extractedData || {};
     const finalIsComplete = isComplete || parsedResponse.isComplete;
 
-    // Save extracted data to Firestore if there's new data
-    if (Object.keys(extractedData).length > 0 && userId) {
-      try {
-        const userDocRef = doc(db, 'users', userId);
-        const pregnancyDataRef = doc(userDocRef, 'pregnancyData', 'current');
-        
-        // Get existing data
-        const existingDoc = await getDoc(pregnancyDataRef);
-        const existingData = existingDoc.exists() ? existingDoc.data() : {};
-
-        // Merge with new extracted data
-        const mergedData: any = {
-          ...existingData,
-          ...extractedData,
-          updatedAt: new Date().toISOString(),
-        };
-
-        // If conversation is complete, mark it
-        if (finalIsComplete) {
-          mergedData.completedAt = new Date().toISOString();
-          mergedData.profileCompleted = true;
-        }
-
-        await setDoc(pregnancyDataRef, mergedData, { merge: true });
-        console.log('Pregnancy data saved to Firestore for user:', userId);
-      } catch (firestoreError) {
-        console.error('Error saving to Firestore:', firestoreError);
-        // Don't fail the request if Firestore save fails, just log it
+    // NOTE: Data saving is now handled by the client-side (moomacomplete page)
+    // The API only extracts and returns the data, the user saves it after completion
+    if (extractedData && Object.keys(extractedData).length > 0) {
+      console.log('📝 Extracted data from user response:');
+      console.log('📝 Fields extracted:', Object.keys(extractedData).join(', '));
+      console.log('📝 Data:', extractedData);
+      
+      if (finalIsComplete) {
+        console.log('✓ Conversation completed! User will now save all data from client-side.');
       }
     }
 

@@ -37,7 +37,7 @@ export default function Login() {
     try {
       await signIn(formData);
       toast.success('Login successful!');
-      router.push('/dashboard');
+      router.push('/pages/homepage');
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
     } finally {
@@ -50,7 +50,7 @@ export default function Login() {
     try {
       await signInWithGoogle();
       toast.success('Login successful!');
-      router.push('/dashboard');
+      router.push('/pages/homepage');
     } catch (error: any) {
       toast.error(error.message || 'Google login failed');
     } finally {
@@ -84,7 +84,7 @@ export default function Login() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent text-gray-700 placeholder-gray-400"
                   placeholder="masukkan email kamu"
                   required
                 />
@@ -100,7 +100,7 @@ export default function Login() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent text-gray-700 placeholder-gray-400"
                   placeholder="masukkan password kamu"
                   required
                 />

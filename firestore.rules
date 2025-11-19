@@ -24,9 +24,17 @@ service cloud.firestore {
     }
     
     function isValidUserUpdate() {
-      // Only allow updates to lastLoginAt and encryptedData fields
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt', 'encryptedData']) &&
-             request.resource.data.lastLoginAt is timestamp;
+      // Allow updates to lastLoginAt, encryptedData, and updatedAt fields
+      let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      return affectedKeys.hasOnly(['lastLoginAt', 'encryptedData', 'updatedAt']) ||
+             affectedKeys.size() == 0; // Allow empty updates (merge operations)
+    }
+    
+    function isMinimalUserDocument() {
+      // Allow creation of minimal user documents (for API to create parent docs)
+      return request.resource.data.keys().hasAll(['uid']) &&
+             request.resource.data.uid is string &&
+             request.resource.data.uid == request.auth.uid;
     }
     
     // Users collection rules
@@ -35,9 +43,10 @@ service cloud.firestore {
       allow read: if isAuthenticated() && isOwner(userId);
       
       // Allow create if user is authenticated, creating their own document, and data is valid
+      // Also allow minimal documents for API to create parent docs for subcollections
       allow create: if isAuthenticated() && 
                    isOwner(userId) && 
-                   isValidUserData();
+                   (isValidUserData() || isMinimalUserDocument());
       
       // Allow update if user is authenticated, updating their own document, and update is valid
       allow update: if isAuthenticated() && 
@@ -46,6 +55,25 @@ service cloud.firestore {
       
       // Prevent deletion of user documents
       allow delete: if false;
+      
+      // Pregnancy data subcollection - allow authenticated users to read/write their own pregnancy data
+      match /pregnancyData/{document=**} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+        allow create: if isAuthenticated() && isOwner(userId);
+        allow update: if isAuthenticated() && isOwner(userId);
+        allow delete: if isAuthenticated() && isOwner(userId);
+      }
+    }
+    
+    // Pregnancy data collection - direct collection (not subcollection)
+    // Only authenticated users can write their own data
+    match /pregnancyData/{userId} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && isOwner(userId);
     }
     
     // Pregnancy tracking collection (example for future features)

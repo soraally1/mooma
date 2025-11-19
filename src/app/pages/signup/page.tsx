@@ -60,7 +60,7 @@ export default function Signup() {
     try {
       await signUp(formData);
       toast.success('Akun berhasil dibuat!');
-      router.push('/dashboard');
+      router.push('/pages/moomacomplete');
     } catch (error: any) {
       toast.error(error.message || 'Gagal membuat akun');
     } finally {
@@ -73,7 +73,7 @@ export default function Signup() {
     try {
       await signInWithGoogle();
       toast.success('Akun berhasil dibuat!');
-      router.push('/dashboard');
+      router.push('/pages/moomacomplete');
     } catch (error: any) {
       toast.error(error.message || 'Gagal daftar dengan Google');
     } finally {
@@ -107,7 +107,7 @@ export default function Signup() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent text-gray-700 placeholder-gray-400"
                   placeholder="masukkan nama lengkap kamu"
                   required
                 />
@@ -123,7 +123,7 @@ export default function Signup() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent text-gray-700 placeholder-gray-400"
                   placeholder="masukkan email kamu"
                   required
                 />
@@ -139,7 +139,7 @@ export default function Signup() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent text-gray-700 placeholder-gray-400"
                   placeholder="masukkan password kamu"
                   required
                 />
@@ -156,7 +156,7 @@ export default function Signup() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-pink-200 focus:outline-none focus:ring-2 focus:ring-[#E26884] focus:border-transparent text-gray-700 placeholder-gray-400"
                   placeholder="konfirmasi password kamu"
                   required
                 />
