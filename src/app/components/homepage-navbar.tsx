@@ -48,7 +48,7 @@ export default function HomepageNavbar() {
             Beranda
           </button>
           <button 
-            onClick={() => handleNavigation('/pages/homepage')}
+            onClick={() => handleNavigation('/pages/resep')}
             className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
           >
             <Utensils className="w-5 h-5 group-hover:scale-125 transition-transform" />
@@ -91,7 +91,7 @@ export default function HomepageNavbar() {
           <span className="text-xs font-bold">Beranda</span>
         </button>
         <button 
-          onClick={() => handleNavigation('/pages/homepage')}
+          onClick={() => handleNavigation('/pages/resep')}
           className="flex flex-col items-center gap-1 text-[#B13455] hover:text-[#EE6983] transition-all duration-300 transform hover:scale-110 group"
         >
           <Utensils className="w-6 h-6 group-hover:scale-125 transition-transform" />

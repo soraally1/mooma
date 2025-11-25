@@ -10,6 +10,7 @@ import HomepageNavbar from '@/app/components/homepage-navbar';
 
 interface PregnancyData {
   name?: string;
+  age?: number;
   lastMenstrualPeriod?: string;
   currentBodyWeight?: number;
   bloodPressure?: string;
@@ -177,6 +178,48 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      {/* Mother's Information Section */}
+      <section className="px-4 lg:px-8 py-8 lg:py-10" style={{ backgroundColor: '#EE6983' }}>
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-black text-[#EE6983] mb-6">Informasi Ibu</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Nama */}
+            <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
+              <p className="text-xs text-[#EE6983] font-bold mb-3">Nama</p>
+              <p className="text-2xl font-black text-[#EE6983]">
+                {pregnancyData.name || '-'}
+              </p>
+            </div>
+
+            {/* Umur */}
+            <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
+              <p className="text-xs text-[#EE6983] font-bold mb-3">Umur</p>
+              <p className="text-2xl font-black text-[#EE6983]">
+                {pregnancyData.age || '-'}
+              </p>
+              <p className="text-xs text-[#EE6983] font-semibold mt-1">tahun</p>
+            </div>
+
+            {/* Tinggi */}
+            <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
+              <p className="text-xs text-[#EE6983] font-bold mb-3">Tinggi</p>
+              <p className="text-2xl font-black text-[#EE6983]">
+                {pregnancyData.height || '-'}
+              </p>
+              <p className="text-xs text-[#EE6983] font-semibold mt-1">cm</p>
+            </div>
+
+            {/* Golongan Darah */}
+            <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
+              <p className="text-xs text-[#EE6983] font-bold mb-3">Golongan Darah</p>
+              <p className="text-2xl font-black text-[#EE6983]">
+                {pregnancyData.bloodType || '-'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Content Section */}
       <div className="px-4 py-6 space-y-6" style={{ backgroundColor: '#EE6983' }}>
 
@@ -206,7 +249,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Kebutuhan Nutrisi Mooma */}
-        <div className="rounded-3xl p-6 shadow-lg" style={{ backgroundColor: '#FFE8F0' }}>
+        <div className="rounded-3xl p-6 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
           <h3 className="text-[#EE6983] font-bold text-lg mb-5">Kebutuhan nutrisi mooma</h3>
           <div className="space-y-5">
             {[
@@ -246,7 +289,7 @@ export default function ProfilePage() {
               <div
                 key={idx}
                 className="rounded-3xl p-4 flex items-center gap-4 shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                style={{ backgroundColor: '#FFE8F0' }}
+                style={{ backgroundColor: '#FFF5E4' }}
               >
                 <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-orange-300 to-orange-400 shrink-0 flex items-center justify-center text-2xl shadow-md">
                   🍗

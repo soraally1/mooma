@@ -215,7 +215,7 @@ export default function Homepage() {
               >
                 {/* Icon Box */}
                 <div className="bg-white rounded-3xl p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-2">
-                  <feature.icon className="w-10 h-10 lg:w-14 lg:h-14 text-[#EE6983] transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
+                  <feature.icon className="w-10 h-10 lg:w-14 lg:h-14 text-[#EE6983] gtransition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
                 </div>
                 {/* Text Label */}
                 <p className="text-white text-sm lg:text-base text-center font-bold leading-tight">
