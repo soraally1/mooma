@@ -254,25 +254,26 @@ Mari kita mulai dengan beberapa pertanyaan penting:
       {completed && (
         <div className="px-4 lg:px-8 pb-6 space-y-4">
           {/* Data Summary Card */}
-          <div className="max-w-4xl mx-auto bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 p-6 lg:p-8 rounded-3xl shadow-2xl animate-fade-in">
+          <div className="max-w-4xl mx-auto bg-[#E26884] border-2 border-[#E26884] p-6 lg:p-8 rounded-3xl shadow-2xl animate-fade-in">
             <div className="flex items-start gap-4 mb-6">
-              <div className="bg-blue-600 p-3 rounded-full">
+              <div className="bg-[#E26884] p-3 rounded-full">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-blue-900 font-bold text-2xl">Data Kehamilanmu Telah Dikumpulkan</p>
-                <p className="text-blue-700 text-sm mt-1">Berikut adalah data yang telah dikumpulkan. Silakan periksa kembali sebelum menyimpan:</p>
+                <p className="text-white font-bold text-2xl">Data Kehamilanmu Telah Dikumpulkan</p>
+                <p className="text-pink-50 text-sm mt-1">Berikut adalah data yang telah dikumpulkan. Silakan periksa kembali sebelum menyimpan:</p>
               </div>
             </div>
-            
+
             {/* Data Display Grid */}
-            <div className="bg-white bg-opacity-80 backdrop-blur-sm p-5 rounded-2xl max-h-96 overflow-y-auto mb-6 border border-blue-100 shadow-inner">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+                className="bg-white bg-opacity-80 backdrop-blur-sm p-5 rounded-2xl max-h-96 overflow-y-auto mb-6 border border-blue-100 shadow-inner">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(pregnancyData).map(([key, value]) => {
                   if (value && key !== 'userId' && key !== 'updatedAt' && key !== 'completedAt' && key !== 'profileCompleted') {
                     return (
-                      <div key={key} className="bg-linear-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
-                        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                      <div key={key} className="bg-linear-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-[#E26884] hover:border-[#D15570] hover:shadow-md transition-all">
+                        <p className="text-xs font-bold text-[#E26884] uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
                         <p className="text-sm font-semibold text-gray-800 mt-2 word-break leading-relaxed">
                           {typeof value === 'object' ? JSON.stringify(value) : String(value)}
                         </p>
@@ -288,7 +289,7 @@ Mari kita mulai dengan beberapa pertanyaan penting:
             <button
               onClick={savePregnancyData}
               disabled={loading}
-              className="w-full bg-linear-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 disabled:from-gray-400 disabled:via-gray-400 disabled:to-gray-400 text-white font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl text-lg"
+              className="w-full bg-white border border-[#FFE8D6] hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 disabled:from-gray-400 disabled:via-gray-400 disabled:to-gray-400 text-[#E26884] font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl text-lg"
             >
               {loading ? (
                 <>
@@ -323,7 +324,7 @@ Mari kita mulai dengan beberapa pertanyaan penting:
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="bg-linear-to-r from-[#EE6983] to-[#E26884] hover:from-[#B13455] hover:to-[#A02D47] text-white px-6 py-4 rounded-2xl font-bold transition-all transform hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                className="bg-white text-white px-6 py-4 rounded-2xl font-bold transition-all transform hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
               >
                 {loading ? (
                   <Loader className="w-5 h-5 animate-spin" />
