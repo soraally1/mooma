@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader, ArrowRight, CheckCircle, MessageCircle } from 'lucide-react';
+import { Send, Loader2, ArrowRight, CheckCircle2, MessageCircle, Heart, ShieldCheck, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -14,6 +14,8 @@ interface Message {
 }
 
 interface PregnancyData {
+  name?: string;
+  age?: number;
   lastMenstrualPeriod?: string;
   dueDate?: string;
   currentTrimester?: string;
@@ -23,6 +25,7 @@ interface PregnancyData {
   allergies?: string;
   currentMedications?: string;
   healthConditions?: string;
+  bloodPressure?: string;
   exerciseFrequency?: string;
   dietaryPreferences?: string;
   emergencyContact?: string;
@@ -52,11 +55,9 @@ export default function MoomaComplete() {
     const initialMessage: Message = {
       id: '0',
       role: 'assistant',
-      content: `Halo Mooma! 👋 Selamat datang di Mooma Complete. Saya di sini untuk membantu mengumpulkan informasi lengkap tentang perjalanan kehamilanmu.
+      content: `Halo Mooma! Selamat datang di Mooma Complete. Saya di sini untuk membantu mengumpulkan informasi lengkap tentang perjalanan kehamilanmu.
 
-Mari kita mulai dengan beberapa pertanyaan penting:
-
-1. Kapan hari pertama menstruasi terakhirmu? (format: DD-MM-YYYY)`,
+Untuk memulai, bolehkah saya tahu siapa nama Bunda dan berapa usianya saat ini?`,
       timestamp: new Date(),
     };
     setMessages([initialMessage]);
@@ -155,13 +156,13 @@ Mari kita mulai dengan beberapa pertanyaan penting:
       setLoading(true);
       const user = auth.currentUser;
       if (!user) {
-        console.error('❌ User not authenticated');
+        console.error('User not authenticated');
         alert('Silakan login terlebih dahulu');
         return;
       }
 
-      console.log('💾 Saving pregnancy data for user:', user.uid);
-      console.log('📊 Data to save:', pregnancyData);
+      console.log('Saving pregnancy data for user:', user.uid);
+      console.log('Data to save:', pregnancyData);
 
       // Save to the direct pregnancyData collection (not subcollection)
       const dataToSave = {
@@ -174,63 +175,69 @@ Mari kita mulai dengan beberapa pertanyaan penting:
 
       await setDoc(doc(db, 'pregnancyData', user.uid), dataToSave, { merge: true });
 
-      console.log('✅ Pregnancy data saved successfully');
-      alert('✅ Data berhasil disimpan!');
-      
+      console.log('Pregnancy data saved successfully');
+      alert('Data berhasil disimpan!');
+
       // Redirect to homepage after successful save
       setTimeout(() => {
         router.push('/pages/homepage');
       }, 1500);
     } catch (error: any) {
-      console.error('❌ Error saving pregnancy data:', error);
+      console.error('Error saving pregnancy data:', error);
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
-      alert(`❌ Gagal menyimpan data: ${error.message}`);
+      alert(`Gagal menyimpan data: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-b from-[#FFF5E4] to-[#FFE8D6]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-rose-50 to-orange-50 font-sans">
       {/* Header */}
-      <div className="bg-linear-to-r from-[#EE6983] via-[#E26884] to-[#B13455] text-white p-6 lg:p-8 shadow-xl">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-3">
-            <MessageCircle className="w-8 h-8" />
-            <h1 className="text-4xl lg:text-5xl font-bold">Mooma Complete</h1>
-          </div>
-          <p className="text-base opacity-95 font-light">Lengkapi informasi kehamilanmu bersama AI Assistant kami yang peduli</p>
-          <div className="mt-4 flex gap-2 flex-wrap">
-            <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs font-medium">✓ Aman & Terpercaya</span>
-            <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs font-medium">✓ Data Terenkripsi</span>
+      <div className="bg-white/80 backdrop-blur-md border-b border-rose-100 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="text-xl font-bold text-gray-800">Mooma Complete</h1>
+                <p className="text-xs text-gray-500">Asisten Kehamilan Pribadimu</p>
+              </div>
+            </div>
+            <div className="flex gap-4 text-xs font-medium text-gray-500 hidden sm:flex">
+              <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                Aman & Terpercaya
+              </span>
+              <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                <Lock className="w-3.5 h-3.5 text-rose-500" />
+                Data Terenkripsi
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Chat Container */}
-      <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-        <div className="max-w-4xl mx-auto space-y-5">
+      <div className="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth">
+        <div className="max-w-3xl mx-auto space-y-6">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              } animate-fade-in`}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'
+                } animate-fade-in`}
             >
               <div
-                className={`max-w-xs lg:max-w-2xl px-5 py-4 rounded-3xl transition-all ${
-                  message.role === 'user'
-                    ? 'bg-linear-to-r from-[#EE6983] to-[#E26884] text-white rounded-br-none shadow-lg hover:shadow-xl'
-                    : 'bg-white text-gray-800 rounded-bl-none shadow-md hover:shadow-lg border border-pink-100'
-                }`}
+                className={`max-w-[85%] lg:max-w-2xl px-6 py-4 rounded-2xl shadow-sm transition-all ${message.role === 'user'
+                  ? 'bg-rose-500 text-white rounded-br-none'
+                  : 'bg-white text-gray-700 rounded-bl-none border border-rose-50'
+                  }`}
               >
-                <p className="text-sm lg:text-base leading-relaxed whitespace-pre-wrap font-medium">
+                <p className="text-sm lg:text-base leading-relaxed whitespace-pre-wrap">
                   {message.content}
                 </p>
-                <p className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-white opacity-70' : 'text-gray-500'
-                }`}>
+                <p className={`text-[10px] mt-2 text-right ${message.role === 'user' ? 'text-rose-100' : 'text-gray-400'
+                  }`}>
                   {message.timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
@@ -238,10 +245,10 @@ Mari kita mulai dengan beberapa pertanyaan penting:
           ))}
           {loading && (
             <div className="flex justify-start animate-fade-in">
-              <div className="bg-white text-gray-800 rounded-3xl rounded-bl-none px-5 py-4 shadow-md border border-pink-100">
+              <div className="bg-white text-gray-800 rounded-2xl rounded-bl-none px-6 py-4 shadow-sm border border-rose-50">
                 <div className="flex items-center gap-2">
-                  <Loader className="w-5 h-5 animate-spin text-[#EE6983]" />
-                  <span className="text-sm text-gray-600">AI sedang mengetik...</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-rose-500" />
+                  <span className="text-sm text-gray-500">Sedang mengetik...</span>
                 </div>
               </div>
             </div>
@@ -252,29 +259,26 @@ Mari kita mulai dengan beberapa pertanyaan penting:
 
       {/* Completion Status */}
       {completed && (
-        <div className="px-4 lg:px-8 pb-6 space-y-4">
-          {/* Data Summary Card */}
-          <div className="max-w-4xl mx-auto bg-[#E26884] border-2 border-[#E26884] p-6 lg:p-8 rounded-3xl shadow-2xl animate-fade-in">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="bg-[#E26884] p-3 rounded-full">
-                <CheckCircle className="w-6 h-6 text-white" />
+        <div className="px-4 lg:px-8 pb-8 animate-fade-in">
+          <div className="max-w-3xl mx-auto bg-white border border-rose-100 p-6 lg:p-8 rounded-3xl shadow-xl shadow-rose-100/50">
+            <div className="text-center mb-8">
+              <div className="bg-emerald-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8 text-emerald-500" />
               </div>
-              <div className="flex-1">
-                <p className="text-white font-bold text-2xl">Data Kehamilanmu Telah Dikumpulkan</p>
-                <p className="text-pink-50 text-sm mt-1">Berikut adalah data yang telah dikumpulkan. Silakan periksa kembali sebelum menyimpan:</p>
-              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Data Berhasil Dikumpulkan</h2>
+              <p className="text-gray-500 text-sm">Silakan periksa kembali ringkasan data kesehatanmu di bawah ini.</p>
             </div>
 
-            {/* Data Display Grid */}
-            <div
-                className="bg-white bg-opacity-80 backdrop-blur-sm p-5 rounded-2xl max-h-96 overflow-y-auto mb-6 border border-blue-100 shadow-inner">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-2xl p-6 mb-8 max-h-96 overflow-y-auto border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {Object.entries(pregnancyData).map(([key, value]) => {
-                  if (value && key !== 'userId' && key !== 'updatedAt' && key !== 'completedAt' && key !== 'profileCompleted') {
+                  if (value && !['userId', 'updatedAt', 'completedAt', 'profileCompleted'].includes(key)) {
                     return (
-                      <div key={key} className="bg-linear-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-[#E26884] hover:border-[#D15570] hover:shadow-md transition-all">
-                        <p className="text-xs font-bold text-[#E26884] uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
-                        <p className="text-sm font-semibold text-gray-800 mt-2 word-break leading-relaxed">
+                      <div key={key} className="border-b border-gray-200 pb-2 last:border-0 last:pb-0">
+                        <p className="text-xs font-medium text-rose-500 uppercase tracking-wider mb-1">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </p>
+                        <p className="text-sm text-gray-700 font-medium">
                           {typeof value === 'object' ? JSON.stringify(value) : String(value)}
                         </p>
                       </div>
@@ -285,22 +289,20 @@ Mari kita mulai dengan beberapa pertanyaan penting:
               </div>
             </div>
 
-            {/* Combined Save & Continue Button */}
             <button
               onClick={savePregnancyData}
               disabled={loading}
-              className="w-full bg-white border border-[#FFE8D6] hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 disabled:from-gray-400 disabled:via-gray-400 disabled:to-gray-400 text-[#E26884] font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl text-lg"
+              className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white font-semibold py-4 px-8 rounded-xl transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2 group"
             >
               {loading ? (
                 <>
-                  <Loader className="w-6 h-6 animate-spin" />
-                  Menyimpan & Melanjutkan...
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Menyimpan Data...
                 </>
               ) : (
                 <>
-                  <CheckCircle className="w-6 h-6" />
-                  Simpan & Lanjut ke Beranda
-                  <ArrowRight className="w-6 h-6" />
+                  Simpan & Lanjut
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
@@ -310,30 +312,32 @@ Mari kita mulai dengan beberapa pertanyaan penting:
 
       {/* Input Area */}
       {!completed && (
-        <div className="bg-linear-to-r from-white to-pink-50 border-t-4 border-[#EE6983] p-4 lg:p-8 shadow-2xl">
-          <div className="max-w-4xl mx-auto">
-            <form onSubmit={handleSendMessage} className="flex gap-3">
+        <div className="bg-white/80 backdrop-blur-md border-t border-rose-100 p-4 lg:p-6">
+          <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleSendMessage} className="relative flex gap-3">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ketik jawaban atau pertanyaanmu..."
+                placeholder="Ketik jawabanmu di sini..."
                 disabled={loading}
-                className="flex-1 px-5 py-4 rounded-2xl border-2 border-[#EE6983] focus:outline-none focus:border-[#B13455] focus:ring-2 focus:ring-[#EE6983] focus:ring-opacity-20 transition-all disabled:bg-gray-100 disabled:text-gray-500 text-gray-800 placeholder-gray-500 font-medium"
+                className="w-full pl-6 pr-14 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-100 transition-all text-gray-700 placeholder-gray-400"
               />
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="bg-white text-white px-6 py-4 rounded-2xl font-bold transition-all transform hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                className="absolute right-2 top-2 bottom-2 bg-rose-500 text-white aspect-square rounded-xl hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center shadow-md"
               >
                 {loading ? (
-                  <Loader className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Send className="w-5 h-5" />
                 )}
               </button>
             </form>
-            <p className="text-xs text-gray-600 mt-3 text-center font-medium">Jawab dengan jujur dan lengkap untuk hasil terbaik</p>
+            <p className="text-[10px] text-center text-gray-400 mt-3">
+              Informasi ini akan membantu kami memberikan saran kesehatan yang lebih akurat
+            </p>
           </div>
         </div>
       )}
@@ -350,7 +354,7 @@ Mari kita mulai dengan beberapa pertanyaan penting:
           }
         }
         .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
+          animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
     </div>

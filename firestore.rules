@@ -74,6 +74,24 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isOwner(userId);
       allow update: if isAuthenticated() && isOwner(userId);
       allow delete: if isAuthenticated() && isOwner(userId);
+      
+      // Exercise tutorials subcollection - tracks which tutorials user has viewed
+      match /exerciseTutorials/{exerciseId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+        allow create: if isAuthenticated() && isOwner(userId);
+        allow update: if isAuthenticated() && isOwner(userId);
+        allow delete: if isAuthenticated() && isOwner(userId);
+      }
+      
+      // Exercise history subcollection - tracks completed exercise sessions
+      match /exerciseHistory/{sessionId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+        allow create: if isAuthenticated() && isOwner(userId);
+        allow update: if isAuthenticated() && isOwner(userId);
+        allow delete: if isAuthenticated() && isOwner(userId);
+      }
     }
     
     // Pregnancy tracking collection (example for future features)
@@ -136,6 +154,14 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
                    request.resource.data.userId == request.auth.uid &&
                    request.resource.data.createdAt == request.time;
+    }
+
+    // Saved Recipes Collection
+    match /savedRecipes/{recipeId} {
+      allow read, update, delete: if isAuthenticated() && 
+                                 resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
     }
     
     // Default deny all other documents

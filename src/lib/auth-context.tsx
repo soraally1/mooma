@@ -10,7 +10,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (data: any) => Promise<void>;
   signIn: (data: any) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await AuthService.signInWithGoogle();
       setUser(result.user);
       setUserData(result.userData);
+      return result;
     } finally {
       setLoading(false);
     }

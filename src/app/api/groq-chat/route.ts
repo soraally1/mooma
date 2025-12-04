@@ -10,12 +10,14 @@ interface Message {
 
 interface PregnancyData {
   // Data Pribadi & Antropometri
+  name?: string;
+  age?: number;
   height?: number;
   prePregnancyWeight?: number;
   bloodType?: string;
   drugAllergies?: string;
   foodAllergies?: string;
-  
+
   // Riwayat Kehamilan
   lastMenstrualPeriod?: string;
   estimatedDueDate?: string;
@@ -23,25 +25,25 @@ interface PregnancyData {
   gravidaParityAbortus?: string;
   medicalHistory?: string;
   previousPregnancyComplications?: string;
-  
+
   // Informasi Kesehatan Saat Ini
   currentMedications?: string;
   currentHealthConditions?: string;
   currentWeight?: number;
   bloodPressure?: string;
   exerciseFrequency?: string;
-  
+
   // Monitoring Kesehatan Kehamilan
   mood?: string;
   complaints?: string;
   currentBodyWeight?: number;
   babyMovement?: string;
   additionalNotes?: string;
-  
+
   // Informasi Kontak Darurat
   emergencyContactName?: string;
   emergencyContactPhone?: string;
-  
+
   // Metadata
   [key: string]: string | number | undefined;
 }
@@ -67,61 +69,66 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const SYSTEM_PROMPT = `Kamu adalah asisten AI yang membantu ibu hamil mengumpulkan informasi lengkap tentang kehamilannya. Nama kamu adalah Mooma Assistant.
 
 INSTRUKSI PENTING:
-1. Tanyakan SEMUA informasi yang diperlukan satu per satu dengan pertanyaan yang jelas dan spesifik
-2. Jangan langsung menyelesaikan percakapan setelah satu atau dua pertanyaan
-3. Lanjutkan bertanya sampai semua informasi terkumpul
-4. EKSTRAK DATA DARI SETIAP JAWABAN PENGGUNA DAN KEMBALIKAN DALAM FORMAT JSON
-5. Berikan respons yang hangat, suportif, dan profesional dalam bahasa Indonesia
+1. Tanyakan SEMUA informasi yang diperlukan SATU PER SATU. JANGAN memborong pertanyaan.
+2. Gunakan bahasa yang SANGAT SEDERHANA, hangat, dan seperti berbicara dengan teman. Hindari istilah medis rumit tanpa penjelasan.
+3. Setiap pertanyaan harus didahului dengan konteks singkat atau empati. Contoh: "Untuk memastikan kesehatan janin, bolehkah saya tahu..."
+4. JIKA jawaban pengguna tidak jelas, tidak masuk akal, atau tidak relevan: JANGAN simpan data tersebut. Tanyakan ulang dengan sopan untuk verifikasi. Contoh: "Maaf, saya kurang paham. Bisa diulangi tanggalnya?"
+5. EKSTRAK DATA DARI SETIAP JAWABAN PENGGUNA DAN KEMBALIKAN DALAM FORMAT JSON.
 
 DAFTAR LENGKAP INFORMASI YANG HARUS DIKUMPULKAN (dalam urutan):
 
 A. DATA PRIBADI & ANTROPOMETRI:
-1. height (Tinggi badan dalam cm)
-2. prePregnancyWeight (Berat badan sebelum hamil dalam kg)
-3. bloodType (Golongan darah: A, B, AB, O)
-4. drugAllergies & foodAllergies (Alergi obat/makanan)
+1. name (Nama Lengkap Bunda)
+2. age (Usia Bunda)
+3. height (Tinggi badan dalam cm)
+4. prePregnancyWeight (Berat badan sebelum hamil dalam kg)
+5. bloodType (Golongan darah: A, B, AB, O)
+6. drugAllergies & foodAllergies (Alergi obat/makanan)
 
 B. RIWAYAT KEHAMILAN:
-5. lastMenstrualPeriod (HPHT - format DD-MM-YYYY)
-6. estimatedDueDate (HPL - akan dihitung otomatis 280 hari dari HPHT)
-7. pregnancyWeek (Usia kehamilan saat ini dalam minggu - akan dihitung otomatis)
-8. gravidaParityAbortus (Kehamilan ke berapa - G/P/A)
-9. medicalHistory (Riwayat penyakit)
-10. previousPregnancyComplications (Riwayat komplikasi kehamilan sebelumnya)
+7. lastMenstrualPeriod (HPHT - format DD-MM-YYYY)
+8. estimatedDueDate (HPL - akan dihitung otomatis 280 hari dari HPHT)
+9. pregnancyWeek (Usia kehamilan saat ini dalam minggu - akan dihitung otomatis)
+10. gravidaParityAbortus (Kehamilan ke berapa - G/P/A)
+11. medicalHistory (Riwayat penyakit)
+12. previousPregnancyComplications (Riwayat komplikasi kehamilan sebelumnya)
 
 C. INFORMASI KESEHATAN SAAT INI:
-11. currentMedications (Obat-obatan yang sedang dikonsumsi)
-12. currentHealthConditions (Kondisi kesehatan saat ini - tekanan darah, berat badan sekarang, dll)
-13. exerciseFrequency (Frekuensi olahraga per minggu)
+13. currentMedications (Obat-obatan yang sedang dikonsumsi)
+14. currentHealthConditions (Kondisi kesehatan saat ini)
+15. bloodPressure (Tekanan Darah - mmHg)
+16. exerciseFrequency (Frekuensi olahraga per minggu)
 
 D. MONITORING KESEHATAN KEHAMILAN:
-14. mood (Mood/Suasana hati saat ini)
-15. complaints (Keluhan yang dirasakan)
-16. currentBodyWeight (Berat badan saat ini dalam kg)
-17. babyMovement (Gerakan bayi)
-18. additionalNotes (Catatan bebas/Informasi tambahan)
+17. mood (Mood/Suasana hati saat ini)
+18. complaints (Keluhan yang dirasakan)
+19. currentBodyWeight (Berat badan saat ini dalam kg)
+20. babyMovement (Gerakan bayi)
+21. additionalNotes (Catatan bebas/Informasi tambahan)
 
-TOTAL: 18 INFORMASI YANG HARUS DIKUMPULKAN
+TOTAL: 21 INFORMASI YANG HARUS DIKUMPULKAN
 
 STRATEGI PERCAKAPAN:
-- Setelah menerima jawaban, EKSTRAK informasi ke field yang sesuai dan tanyakan pertanyaan BERIKUTNYA
-- Jangan puas dengan jawaban singkat - minta penjelasan lebih detail jika diperlukan
-- Gunakan informasi sebelumnya untuk membuat pertanyaan lebih personal
-- Hitung sendiri tanggal perkiraan lahir jika diperlukan (280 hari dari HPHT)
-- Hitung usia kehamilan berdasarkan HPHT
-- Terus tanyakan sampai semua 18 informasi terkumpul
-- Untuk monitoring kesehatan (mood, keluhan, gerakan bayi), tanyakan dengan empati dan perhatian
+- Fokus SATU pertanyaan dalam satu waktu.
+- Jika pengguna menjawab "tidak tahu" atau ragu, berikan estimasi atau cara mengetahuinya.
+- Verifikasi jawaban yang aneh (misal: berat badan 200kg, atau HPHT tahun 2020).
+- Berikan pujian atau dukungan setelah pengguna menjawab (misal: "Wah, bagus sekali Bunda rajin olahraga!").
 
 PENYELESAIAN:
-- Hanya tandai isComplete: true setelah SEMUA 18 informasi telah dikumpulkan
-- Berikan ringkasan data yang telah dikumpulkan dengan format yang rapi dan terorganisir
-- Ucapkan "Data telah lengkap" atau "Terima kasih telah memberikan semua informasi" untuk menandakan selesai
-- Sampaikan bahwa data akan disimpan dengan aman dan dapat diakses kapan saja
+- Hanya tandai isComplete: true setelah SEMUA 21 informasi telah dikumpulkan.
+- Ucapkan "Data telah lengkap" atau "Terima kasih telah memberikan semua informasi".
+
+LARANGAN KERAS:
+- JANGAN PERNAH memberikan ringkasan data ("Data yang dikumpulkan sejauh ini...") jika belum semua 21 informasi terkumpul.
+- JANGAN berhenti bertanya sebelum 21 informasi lengkap.
+- JANGAN membuat asumsi data jika pengguna tidak menyebutkannya.
 
 FORMAT RESPONS (WAJIB JSON - SELALU GUNAKAN FORMAT INI):
 {
   "message": "pesan untuk pengguna",
   "extractedData": {
+    "name": nilai_atau_null,
+    "age": nilai_atau_null,
     "height": nilai_atau_null,
     "prePregnancyWeight": nilai_atau_null,
     "bloodType": nilai_atau_null,
@@ -135,6 +142,7 @@ FORMAT RESPONS (WAJIB JSON - SELALU GUNAKAN FORMAT INI):
     "previousPregnancyComplications": nilai_atau_null,
     "currentMedications": nilai_atau_null,
     "currentHealthConditions": nilai_atau_null,
+    "bloodPressure": nilai_atau_null,
     "exerciseFrequency": nilai_atau_null,
     "mood": nilai_atau_null,
     "complaints": nilai_atau_null,
@@ -146,13 +154,11 @@ FORMAT RESPONS (WAJIB JSON - SELALU GUNAKAN FORMAT INI):
 }
 
 PENTING:
-- SELALU return JSON dengan SEMUA 18 field, gunakan null untuk field yang belum dikumpulkan
-- HANYA isi field yang telah diekstrak dari jawaban pengguna, field lainnya tetap null
-- Ketika semua 18 informasi sudah terkumpul, HARUS menyertakan frasa "Data telah lengkap" dalam pesan
-- Ekstrak HANYA data yang jelas dari jawaban pengguna
-- Jangan membuat atau mengasumsikan data yang tidak ada
-- Selalu tanyakan pertanyaan berikutnya di akhir pesan
-- Gunakan bahasa Indonesia yang hangat dan ramah`;
+- SELALU return JSON dengan SEMUA 21 field.
+- Field "message" HARUS berisi pertanyaan berikutnya jika data belum lengkap.
+- HANYA isi field yang telah diekstrak dari jawaban pengguna.
+- JANGAN mengarang data.
+- Gunakan bahasa Indonesia yang hangat, ramah, dan mudah dimengerti.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -234,11 +240,11 @@ export async function POST(request: NextRequest) {
     try {
       // Try to extract JSON from the response - look for the most complete JSON object
       const jsonMatches = assistantMessage.match(/\{[\s\S]*?\n\}/g) || [];
-      
+
       if (jsonMatches.length > 0) {
         // Try each match, starting with the longest (most complete)
         const sortedMatches = jsonMatches.sort((a: string, b: string) => b.length - a.length);
-        
+
         for (const jsonStr of sortedMatches) {
           try {
             const parsed = JSON.parse(jsonStr);
@@ -274,12 +280,68 @@ export async function POST(request: NextRequest) {
       'terima kasih atas informasi lengkap',
     ];
 
-    const isComplete = completeKeywords.some(keyword =>
+    const isCompleteKeywordPresent = completeKeywords.some(keyword =>
       assistantMessage.toLowerCase().includes(keyword)
     );
 
     const extractedData = parsedResponse.extractedData || {};
-    const finalIsComplete = isComplete || parsedResponse.isComplete;
+
+    // Merge existing data with newly extracted data to check for completeness
+    const accumulatedData = { ...pregnancyData, ...extractedData };
+
+    // Define all 21 required fields
+    const REQUIRED_FIELDS = [
+      'name', 'age', 'height', 'prePregnancyWeight', 'bloodType',
+      'drugAllergies', 'foodAllergies',
+      'lastMenstrualPeriod', 'estimatedDueDate', 'pregnancyWeek',
+      'gravidaParityAbortus', 'medicalHistory', 'previousPregnancyComplications',
+      'currentMedications', 'currentHealthConditions', 'bloodPressure', 'exerciseFrequency',
+      'mood', 'complaints', 'currentBodyWeight', 'babyMovement', 'additionalNotes'
+    ];
+
+    // Check if all required fields are present and not null/undefined
+    // Note: Empty strings might be valid answers (e.g. "None"), but null/undefined means not asked/answered
+
+    // Some fields might be optional or skipped by the user (e.g. "None")
+    // We should allow them to be null/undefined if the AI considers the conversation complete
+    const OPTIONAL_FIELDS = [
+      'additionalNotes',
+      'complaints',
+      'medicalHistory',
+      'previousPregnancyComplications',
+      'drugAllergies',
+      'foodAllergies',
+      'currentMedications',
+      'currentHealthConditions',
+      // Expanded optional fields to prevent stuck state
+      'babyMovement',
+      'mood',
+      'exerciseFrequency',
+      'estimatedDueDate', // Can be calculated from HPHT
+      'pregnancyWeek',    // Can be calculated from HPHT
+      'gravidaParityAbortus',
+      'currentBodyWeight'
+    ];
+
+    const missingFields = REQUIRED_FIELDS.filter(field => {
+      const value = accumulatedData[field];
+      // If it's an optional field, we don't count it as missing for the purpose of blocking completion
+      if (OPTIONAL_FIELDS.includes(field)) return false;
+
+      return value === null || value === undefined;
+    });
+
+    const isDataComplete = missingFields.length === 0;
+
+    // Only mark as complete if BOTH keywords are present AND data is actually complete
+    // OR if the AI explicitly set isComplete to true in JSON AND data is complete
+    let finalIsComplete = (isCompleteKeywordPresent || parsedResponse.isComplete) && isDataComplete;
+
+    if ((isCompleteKeywordPresent || parsedResponse.isComplete) && !isDataComplete) {
+      console.log('⚠️ AI tried to complete conversation, but data is missing:', missingFields.join(', '));
+      // Force it to continue if data is missing
+      finalIsComplete = false;
+    }
 
     // NOTE: Data saving is now handled by the client-side (moomacomplete page)
     // The API only extracts and returns the data, the user saves it after completion
@@ -287,7 +349,7 @@ export async function POST(request: NextRequest) {
       console.log('📝 Extracted data from user response:');
       console.log('📝 Fields extracted:', Object.keys(extractedData).join(', '));
       console.log('📝 Data:', extractedData);
-      
+
       if (finalIsComplete) {
         console.log('✓ Conversation completed! User will now save all data from client-side.');
       }

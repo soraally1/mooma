@@ -40,28 +40,42 @@ export default function HomepageNavbar() {
 
         {/* Desktop Navigation */}
         <nav className="flex items-center gap-10">
-          <button 
+          <button
             onClick={() => handleNavigation('/pages/homepage')}
             className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
           >
             <Home className="w-5 h-5 group-hover:scale-125 transition-transform" />
             Beranda
           </button>
-          <button 
+          <button
             onClick={() => handleNavigation('/pages/resep')}
             className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
           >
             <Utensils className="w-5 h-5 group-hover:scale-125 transition-transform" />
             Resep
           </button>
-          <button 
+          <button
+            onClick={() => handleNavigation('/pages/nutrition')}
+            className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
+          >
+            <Utensils className="w-5 h-5 group-hover:scale-125 transition-transform" />
+            Nutrisi
+          </button>
+          <button
+            onClick={() => handleNavigation('/pages/moomasehat')}
+            className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
+          >
+            <Stethoscope className="w-5 h-5 group-hover:scale-125 transition-transform" />
+            MoomaSehat
+          </button>
+          <button
             onClick={() => handleNavigation('/pages/homepage')}
             className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
           >
             <Stethoscope className="w-5 h-5 group-hover:scale-125 transition-transform" />
             Konsultasi
           </button>
-          <button 
+          <button
             onClick={() => handleNavigation('/pages/profile')}
             className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
           >
@@ -69,7 +83,7 @@ export default function HomepageNavbar() {
             Profil
           </button>
           <div className="h-8 w-1 bg-[#EE6983] rounded-full"></div>
-          <button 
+          <button
             onClick={handleLogout}
             disabled={loading}
             className="flex items-center gap-2 bg-[#EE6983] hover:bg-[#B13455] text-white px-5 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
@@ -83,28 +97,28 @@ export default function HomepageNavbar() {
 
       {/* Mobile Bottom Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#FFF5E4] flex justify-around items-center py-4 z-50">
-        <button 
+        <button
           onClick={() => handleNavigation('/pages/homepage')}
           className="flex flex-col items-center gap-1 text-[#B13455] hover:text-[#EE6983] transition-all duration-300 transform hover:scale-110 group"
         >
           <Home className="w-6 h-6 group-hover:scale-125 transition-transform" />
           <span className="text-xs font-bold">Beranda</span>
         </button>
-        <button 
+        <button
           onClick={() => handleNavigation('/pages/resep')}
           className="flex flex-col items-center gap-1 text-[#B13455] hover:text-[#EE6983] transition-all duration-300 transform hover:scale-110 group"
         >
           <Utensils className="w-6 h-6 group-hover:scale-125 transition-transform" />
           <span className="text-xs font-bold">Resep</span>
         </button>
-        <button 
+        <button
           onClick={() => handleNavigation('/pages/homepage')}
           className="flex flex-col items-center gap-1 text-[#B13455] hover:text-[#EE6983] transition-all duration-300 transform hover:scale-110 group"
         >
           <Stethoscope className="w-6 h-6 group-hover:scale-125 transition-transform" />
           <span className="text-xs font-bold">Konsultasi</span>
         </button>
-        <button 
+        <button
           onClick={() => handleNavigation('/pages/profile')}
           className="flex flex-col items-center gap-1 text-[#B13455] hover:text-[#EE6983] transition-all duration-300 transform hover:scale-110 group"
         >

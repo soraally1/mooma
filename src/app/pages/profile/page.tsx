@@ -87,8 +87,26 @@ export default function ProfilePage() {
     );
   }
 
-  const weeks = pregnancyMetrics?.pregnancyWeek || 0;
-  const weekArray = Array.from({ length: 9 }, (_, i) => weeks - 4 + i).filter(w => w > 0);
+  const weeks = pregnancyMetrics?.pregnancyWeek || 4;
+
+  // Create an array of weeks centered around current week, ensuring we stay within 1-40 range
+  const createWeekArray = (currentWeek: number) => {
+    const totalWeeks = 10; // Show 9 weeks total
+    const beforeCurrent = Math.floor(totalWeeks / 2); // 4 weeks before
+
+    let startWeek = Math.max(1, currentWeek - beforeCurrent);
+    let endWeek = startWeek + totalWeeks - 1;
+
+    // If endWeek exceeds 40, adjust the range
+    if (endWeek > 40) {
+      endWeek = 40;
+      startWeek = Math.max(1, endWeek - totalWeeks + 1);
+    }
+
+    return Array.from({ length: endWeek - startWeek + 1 }, (_, i) => startWeek + i);
+  };
+
+  const weekArray = createWeekArray(weeks);
 
   return (
     <div className="min-h-screen pb-32 lg:pb-0" style={{ backgroundColor: '#FFF5E4' }}>
@@ -98,84 +116,120 @@ export default function ProfilePage() {
       <section className="px-4 lg:px-8 py-8 lg:py-12 relative overflow-hidden" style={{ backgroundColor: '#EE6983' }}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl lg:text-3xl font-black text-white">Kalender Kehamilan</h1>
+          <div className="mb-8">
+            <h1 className="text-3xl lg:text-4xl font-black text-white">Kalender Kehamilan</h1>
           </div>
 
-          {/* Pregnancy Calendar - Horizontal Scrollable */}
-          <div className="mb-10 overflow-x-auto pb-10 scroll-smooth" style={{ scrollBehavior: 'smooth' }}>
-            <style>{`
-              .calendar-scroll::-webkit-scrollbar {
-                height: 6px;
-              }
-              .calendar-scroll::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 10px;
-              }
-              .calendar-scroll::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.5);
-                border-radius: 10px;
-              }
-              .calendar-scroll::-webkit-scrollbar-thumb:hover {
-                background: rgba(255, 255, 255, 0.8);
-              }
-            `}</style>
-            <div className="flex gap-5 min-w-min calendar-scroll">
-              {weekArray.map((week) => (
-                <div
-                  key={week}
-                  className={`rounded-2xl p-4 text-center font-bold transition-all transform shrink-0 w-25 ${
-                    week === weeks
-                      ? 'bg-[#B13455] text-white scale-100 shadow-lg'
-                      : 'bg-[#FFF5E4] text-[#EE6983] hover:scale-90'
-                  }`}
-                >
-                  <div className="text-2xl font-black">{week}</div>
-                  <div className="text-xs mt-1">Minggu</div>
+          {/* Main Content Grid - Calendar and Image */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-10">
+            {/* Left Column - Calendar */}
+            <div className="space-y-6">
+              <div className="overflow-x-auto pb-4 scroll-smooth calendar-scroll">
+                <style>{`
+                  .calendar-scroll::-webkit-scrollbar {
+                    height: 6px;
+                  }
+                  .calendar-scroll::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 10px;
+                  }
+                  .calendar-scroll::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.5);
+                    border-radius: 10px;
+                  }
+                  .calendar-scroll::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.8);
+                  }
+                `}</style>
+                <div className="flex gap-3 min-w-min">
+                  {weekArray.map((week) => (
+                    <div
+                      key={week}
+                      className={`rounded-2xl p-5 text-center font-bold transition-all transform shrink-0 w-24 ${week === weeks
+                        ? 'bg-[#B13455] text-white'
+                        : 'bg-[#FFF5E4] text-[#EE6983] hover:scale-95 shadow-lg'
+                        }`}
+                    >
+                      <div className="text-3xl font-black">{week}</div>
+                      <div className="text-xs mt-1 font-semibold">Minggu</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Fetus Illustration with SVG */}
-          <div className="flex justify-center py-6 lg:py-8">
-            <div className="relative w-56 h-56 lg:w-64 lg:h-64">
-              <img
-                src="/trimester4.svg"
-                alt="Fetus"
-                className="w-full h-full object-contain drop-shadow-2xl"
-              />
+              {/* Week Info Card */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
+                <p className="text-white/80 text-sm mb-2">Minggu ke</p>
+                <p className="text-white text-5xl font-black mb-3">{weeks}</p>
+                <p className="text-white/90 text-base">
+                  {pregnancyMetrics?.gestationalAge || '-'}
+                </p>
+              </div>
+            </div>
+
+            {/* Right Column - Pregnancy Image */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/10 rounded-full blur-3xl"></div>
+                <img
+                  src={(() => {
+                    const week = pregnancyMetrics?.pregnancyWeek || 0;
+                    const availableWeeks = [4, 5, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 25, 30, 35, 40];
+                    const closestWeek = availableWeeks.reduce((prev, curr) =>
+                      Math.abs(curr - week) < Math.abs(prev - week) ? curr : prev
+                    );
+                    return `/size/${closestWeek}.webp`;
+                  })()}
+                  alt="Fetus"
+                  className="w-80 h-80 lg:w-96 lg:h-96 object-contain drop-shadow-2xl relative z-10 animate-bounce-slow"
+                />
+              </div>
             </div>
           </div>
 
           {/* Health Metrics */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-4">
             {/* Berat Badan */}
-            <div className="rounded-3xl p-5 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
+            <div className="rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-sm text-[#EE6983] font-bold mb-3">Berat badan</p>
-              <p className="text-4xl font-black text-[#EE6983]">
+              <p className="text-5xl font-black text-[#EE6983]">
                 {pregnancyData.currentBodyWeight || '-'}
               </p>
               <p className="text-sm text-[#EE6983] font-bold mt-2">kg</p>
             </div>
 
             {/* Tekanan Darah */}
-            <div className="rounded-3xl p-5 text-center text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 border-3 border-white" style={{ backgroundColor: '#EE6983' }}>
+            <div className="rounded-3xl p-6 text-center text-white shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 border-4 border-white" style={{ backgroundColor: '#EE6983' }}>
               <p className="text-sm font-bold mb-3">Tekanan darah</p>
-              <p className="text-3xl font-black">{pregnancyData.bloodPressure || '-'}</p>
+              <p className="text-4xl font-black">{pregnancyData.bloodPressure || '-'}</p>
               <p className="text-sm font-bold mt-2">mmhg</p>
             </div>
 
             {/* Usia Janin */}
-            <div className="rounded-3xl p-5 text-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
+            <div className="rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-sm text-[#EE6983] font-bold mb-3">Usia Janin</p>
-              <p className="text-4xl font-black text-[#EE6983]">
+              <p className="text-5xl font-black text-[#EE6983]">
                 {pregnancyMetrics?.pregnancyWeek || '-'}
               </p>
-              <p className="text-sm text-[#EE6983] font-bold mt-2">hari</p>
+              <p className="text-sm text-[#EE6983] font-bold mt-2">minggu</p>
             </div>
           </div>
         </div>
+
+        {/* Bounce Animation */}
+        <style jsx>{`
+          @keyframes bounce-slow {
+            0%, 100% {
+              transform: translateY(0);
+            }
+            50% {
+              transform: translateY(-10px);
+            }
+          }
+          .animate-bounce-slow {
+            animation: bounce-slow 3s ease-in-out infinite;
+          }
+        `}</style>
       </section>
 
       {/* Mother's Information Section */}

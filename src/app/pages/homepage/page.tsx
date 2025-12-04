@@ -7,6 +7,7 @@ import HomepageNavbar from '@/app/components/homepage-navbar';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { calculatePregnancyMetrics, PregnancyCalculations } from '@/lib/pregnancy-calculator';
+import { getPregnancyDescription } from '@/lib/pregnancy-description';
 
 interface PregnancyData {
   currentBodyWeight?: number;
@@ -64,6 +65,15 @@ export default function Homepage() {
 
         if (docSnap.exists()) {
           const data = docSnap.data() as PregnancyData;
+
+          // Check if profile is completed
+          // @ts-ignore - profileCompleted might not be in the interface yet but it's in the DB
+          if (!data.profileCompleted) {
+            console.log('Profile not completed, redirecting to setup...');
+            router.push('/pages/moomacomplete');
+            return;
+          }
+
           setPregnancyData(data);
           setUserName(data.name || user.displayName || 'Mooma');
 
@@ -78,8 +88,10 @@ export default function Homepage() {
             }
           }
         } else {
-          // No pregnancy data found, use user's display name
-          setUserName(user.displayName || 'Mooma');
+          // No pregnancy data found - redirect to setup
+          console.log('No pregnancy data found, redirecting to setup...');
+          router.push('/pages/moomacomplete');
+          return;
         }
       } catch (error) {
         console.error('Error fetching pregnancy data:', error);
@@ -109,17 +121,57 @@ export default function Homepage() {
       <HomepageNavbar />
 
       {/* Hero Section */}
-      <section className="px-4 lg:px-8 py-10 lg:py-20 text-center lg:text-left relative overflow-hidden" style={{backgroundColor: '#EE6983' }}>
+      <section className="px-4 lg:px-8 py-10 lg:py-20 text-center lg:text-left relative overflow-hidden" style={{ backgroundColor: '#EE6983' }}>
         {/* Decorative Background Elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full -mr-48 -mt-48"></div>
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-white opacity-5 rounded-full -ml-36 -mb-36"></div>
-        
+
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center relative z-10">
-          {/* Left - Image */}
-          <div className="flex justify-center lg:justify-start">
-            <div className={`transform hover:scale-110 transition-all duration-500 ${loading ? 'animate-pulse' : 'animate-bounce-slow'}`}>
-              <img src="/trimester4.svg" alt="Trimester 4" className="w-48 h-48 lg:w-64 lg:h-64 object-contain drop-shadow-2xl" />
+          {/* Pregnancy Week Image */}
+          <div className="flex flex-col items-center lg:items-start gap-6">
+            {/* Image with enhanced size */}
+            <div className={`transform hover:scale-105 transition-all duration-500 ${loading ? 'animate-pulse' : 'animate-bounce-slow'}`}>
+              <img
+                src={(() => {
+                  const week = pregnancyMetrics?.pregnancyWeek || 0;
+                  // Available weeks: 4, 5, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 25, 30, 35, 40
+                  const availableWeeks = [4, 5, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 25, 30, 35, 40];
+                  const closestWeek = availableWeeks.reduce((prev, curr) =>
+                    Math.abs(curr - week) < Math.abs(prev - week) ? curr : prev
+                  );
+                  return `/size/${closestWeek}.webp`;
+                })()}
+                alt={`Pregnancy Week ${pregnancyMetrics?.pregnancyWeek || 0}`}
+                className="w-72 h-72 lg:w-100 lg:h-100 object-contain drop-shadow-2xl"
+              />
             </div>
+
+            {/* Enhanced Description Card */}
+            {!loading && pregnancyMetrics && (
+              <div className="p-5 lg:p-6 max-w-sm w-full">
+                <div className="space-y-2">
+                  {/* Size */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-white/70 text-base font-medium">Ukuran:</span>
+                    <span className="text-white text-2xl font-bold">{getPregnancyDescription(pregnancyMetrics.pregnancyWeek).size}</span>
+                  </div>
+
+                  {/* Comparison */}
+                  <div className="border-l-2 border-white/30 pl-3">
+                    <p className="text-white/90 text-xl italic leading-relaxed">
+                      {getPregnancyDescription(pregnancyMetrics.pregnancyWeek).comparison}
+                    </p>
+                  </div>
+
+                  {/* Medical Note */}
+                  <div className="pt-2 border-t border-white/20">
+                    <p className="text-white/75 text-sm leading-relaxed">
+                      {getPregnancyDescription(pregnancyMetrics.pregnancyWeek).medicalNote}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right - Content */}
@@ -138,10 +190,9 @@ export default function Homepage() {
               )}
             </h2>
             <p className="text-xl lg:text-2xl font-semibold mb-8 animate-fade-in-delay-2 flex items-center gap-2">
-              <span>{userName}</span>
-              <Heart className="w-6 h-6 lg:w-7 lg:h-7 text-yellow-200 fill-yellow-200" />
+              <span>Bunda {userName}</span>
             </p>
-            
+
             {/* Health Metrics Cards */}
             <div className="grid grid-cols-3 gap-3 lg:gap-4">
               {/* Berat Mooma Card */}
@@ -196,7 +247,7 @@ export default function Homepage() {
           <div className="absolute top-10 left-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
           <div className="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex items-center gap-3 mb-6 lg:mb-12">
             <Zap className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
@@ -243,7 +294,7 @@ export default function Homepage() {
                 </button>
               </div>
             </div>
-            
+
             {/* Overlapping Image - Aligned at bottom */}
             <div className="absolute -right-8 bottom-0 lg:-right-12 w-60 h-60 lg:w-80 lg:h-80 pointer-events-none transform hover:scale-110 transition-transform duration-300">
               <img src="/olahraga.svg" alt="Olahraga" className="w-full h-full object-contain " />
@@ -284,13 +335,13 @@ export default function Homepage() {
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-20 right-20 w-48 h-48 bg-[#EE6983] rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex items-center gap-3 mb-8 lg:mb-12">
             <Stethoscope className="w-8 h-8 lg:w-10 lg:h-10 text-[#B13455]" />
             <h3 className="font-black text-2xl lg:text-3xl text-[#B13455]">Konsultasi dengan Dokter Kami</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left - Image */}
             <div className="rounded-3xl overflow-hidden shadow-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2">
