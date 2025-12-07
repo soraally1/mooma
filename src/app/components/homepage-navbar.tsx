@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, Utensils, Stethoscope, User, LogOut, Menu, X } from 'lucide-react';
+import { Home, Utensils, Stethoscope, User, LogOut, Menu, X, BookText } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
@@ -76,8 +76,15 @@ export default function HomepageNavbar() {
             Konsultasi
           </button>
           <button
+          onClick={() => handleNavigation('/pages/ceritamooma')}
+          className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
+          >
+          <BookText className="w-5 h-5 group-hover:scale-125 transition-transform" />
+          Notes
+          </button>
+          <button
             onClick={() => handleNavigation('/pages/profile')}
-            className="flex items-center gap-2 text-[#B13455] hover:text-[#EE6983] font-semibold transition-all duration-300 hover:scale-110 group"
+            className="flex flex-col items-center gap-1 text-[#B13455] hover:text-[#EE6983] transition-all duration-300 transform hover:scale-110 group"
           >
             <User className="w-5 h-5 group-hover:scale-125 transition-transform" />
             Profil
@@ -117,6 +124,13 @@ export default function HomepageNavbar() {
         >
           <Stethoscope className="w-6 h-6 group-hover:scale-125 transition-transform" />
           <span className="text-xs font-bold">Konsultasi</span>
+        </button>
+        <button
+          onClick={() => handleNavigation('/pages/ceritamooma')}
+          className="flex flex-col items-center gap-1 text-[#B13455] hover:text-[#EE6983] transition-all duration-300 transform hover:scale-110 group"
+        >
+          <Stethoscope className="w-6 h-6 group-hover:scale-125 transition-transform" />
+          <span className="text-xs font-bold">Notes</span>
         </button>
         <button
           onClick={() => handleNavigation('/pages/profile')}
