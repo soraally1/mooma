@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Edit, ScanLine, ChefHat, UtensilsCrossed, Heart, Sparkles, BookOpen, PenTool } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Edit, BookOpen, PenTool, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import HomepageNavbar from '@/app/components/homepage-navbar';
@@ -17,20 +17,6 @@ interface NoteData {
   updatedAt: string;
 }
 
-// Mock data - in a real app, you would fetch this from an API
-const mockNotes: Record<string, NoteData> = {
-  '2025-11-28': {
-    id: '1',
-    title: 'Hari ke 19: Bayi mulai aktif gerak',
-    content: 'Hari ini si kecil terlihat sangat aktif bergerak-gerak di dalam perut. Rasanya seperti ada kupu-kupu yang beterbangan di sana. Aku senang merasakan setiap tendangannya, meski kadang membuatku sedikit tidak nyaman.',
-    imageUrl: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    emotion: 'happy',
-    symptoms: ['s1', 's2', 's3'],
-    createdAt: '2025-11-28T10:00:00',
-    updatedAt: '2025-11-28T10:00:00',
-  },
-};
-
 const defaultSymptoms = [
   { id: 's1', name: 'Telat menstruasi', emoji: '⏱️' },
   { id: 's2', name: 'Payudara sensitif/membesar', emoji: '👙' },
@@ -45,7 +31,7 @@ const emotionIcons: Record<string, string> = {
   excited: '🤩',
 };
 
-export default function CeritaMooma() {
+export default function JurnalPage() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState<NoteData[]>([]);
@@ -54,40 +40,28 @@ export default function CeritaMooma() {
 
   useEffect(() => {
     try {
-      // Load notes from localStorage
       const savedData = localStorage.getItem('pregnancy-notes');
-      let savedNotes = [];
-      
-      // Handle both old object format and new array format
+      let savedNotes: NoteData[] = [];
+
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        // If it's an object (old format), convert to array of notes
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
           savedNotes = Object.values(parsed);
         } else if (Array.isArray(parsed)) {
           savedNotes = parsed;
         }
       }
-      
-      // Get notes for the current date
+
       const dateStr = currentDate.toISOString().split('T')[0];
-      const notesForDate = savedNotes.filter((note: any) => 
+      const notesForDate = savedNotes.filter((note: NoteData) =>
         note && note.createdAt && note.createdAt.startsWith(dateStr)
       );
-      
-      // Sort by updatedAt (newest first)
-      const sortedNotes = [...notesForDate].sort((a: any, b: any) => 
+
+      const sortedNotes = [...notesForDate].sort((a: NoteData, b: NoteData) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
-      
-      // Convert string dates back to Date objects for the UI
-      const notesWithDates = sortedNotes.map((note: any) => ({
-        ...note,
-        createdAt: new Date(note.createdAt),
-        updatedAt: new Date(note.updatedAt)
-      }));
-      
-      setNotes(notesWithDates);
+
+      setNotes(sortedNotes);
     } catch (error) {
       console.error('Error loading notes:', error);
       setNotes([]);
@@ -100,17 +74,6 @@ export default function CeritaMooma() {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() + days);
     setCurrentDate(newDate);
-  };
-
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
-    };
-    return new Intl.DateTimeFormat('id-ID', options).format(dateObj);
   };
 
   const formatTime = (date: Date | string) => {
@@ -172,7 +135,7 @@ export default function CeritaMooma() {
               </Link>
             </div>
           </div>
-          
+
 
           <div className="flex justify-center lg:justify-end order-1 lg:order-2">
             <div className="relative w-64 h-64 lg:w-80 lg:h-80 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
@@ -194,7 +157,7 @@ export default function CeritaMooma() {
             <div className="max-w-2xl mx-auto px-4 py-3">
               <div className="flex justify-between items-center mb-2">
                 <h1 className="text-lg font-bold text-[#B13455]">Jurnal Harian</h1>
-                <Link 
+                <Link
                   href="/pages/ceritamooma/notes"
                   className="bg-[#B13455] text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 hover:bg-[#EE6983] transition-colors"
                 >
@@ -202,30 +165,30 @@ export default function CeritaMooma() {
                   Baru
                 </Link>
               </div>
-              
+
               {/* Date Navigation */}
               <div className="flex items-center justify-between bg-white p-2 rounded-lg">
-                <button 
+                <button
                   onClick={() => navigateDay(-1)}
                   className="p-2 hover:bg-gray-100 rounded-full text-[#B13455]"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                
+
                 <div className="text-center">
                   <div className="font-medium text-[#B13455]">
                     {currentDate.toLocaleDateString('id-ID', { weekday: 'long' })}
                   </div>
                   <div className="text-sm text-gray-600">
-                    {currentDate.toLocaleDateString('id-ID', { 
-                      day: 'numeric', 
-                      month: 'long', 
-                      year: 'numeric' 
+                    {currentDate.toLocaleDateString('id-ID', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
                     })}
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => navigateDay(1)}
                   className="p-2 hover:bg-gray-100 rounded-full text-[#B13455]"
                 >
@@ -234,105 +197,103 @@ export default function CeritaMooma() {
               </div>
             </div>
           </header>
-      
-      
 
           <main className="p-4 max-w-2xl mx-auto">
             {isLoading ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">Memuat...</p>
               </div>
-        ) : notes.length > 0 ? (
-          <div className="space-y-4">
-            {notes.map((note) => (
-              <div key={note.id} className="bg-white rounded-2xl p-6 shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xl font-bold text-[#B13455]">
-                    {note.title}
-                  </h2>
-                  <Link 
-                    href={`/pages/ceritamooma/notes?edit=${note.id}`}
-                    className="text-[#B13455] hover:text-[#EE6983] p-1"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </Link>
-                </div>
-                
-                <div className="text-gray-500 text-sm mb-4">
-                  {formatTime(note.updatedAt)}
-                </div>
-                
-                <p className="text-gray-700 mb-4 whitespace-pre-line">
-                  {note.content}
-                </p>
-                
-                {note.imageUrl && (
-                  <div className="mb-4 rounded-xl overflow-hidden">
-                    <img
-                      src={note.imageUrl}
-                      alt="Catatan kehamilan"
-                      className="w-full h-48 object-cover"
-                    />
-                  </div>
-                )}
-                
-                {note.emotion && (
-                  <div className="flex items-center mt-4 pt-4 border-t border-gray-100">
-                    <span className="text-2xl mr-2">
-                      {emotionIcons[note.emotion] || '😐'}
-                    </span>
-                    <span className="text-sm text-gray-600 capitalize">
-                      {note.emotion}
-                    </span>
-                  </div>
-                )}
-                
-                {note.symptoms && note.symptoms.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <h3 className="text-[#EE6983] font-bold mb-2">Gejala yang Dirasakan</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {defaultSymptoms
-                        .filter(symptom => note.symptoms.includes(symptom.id))
-                        .map(symptom => (
-                          <span
-                            key={symptom.id}
-                            className="inline-flex items-center bg-[#FFE4E9] text-[#EE6983] px-3 py-1 rounded-full text-sm"
-                          >
-                            <span className="mr-1">{symptom.emoji}</span>
-                            {symptom.name}
-                          </span>
-                        ))}
+            ) : notes.length > 0 ? (
+              <div className="space-y-4">
+                {notes.map((note) => (
+                  <div key={note.id} className="bg-white rounded-2xl p-6 shadow-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-bold text-[#B13455]">
+                        {note.title}
+                      </h2>
+                      <Link
+                        href={`/pages/ceritamooma/notes?edit=${note.id}`}
+                        className="text-[#B13455] hover:text-[#EE6983] p-1"
+                      >
+                        <Edit className="w-5 h-5" />
+                      </Link>
                     </div>
+
+                    <div className="text-gray-500 text-sm mb-4">
+                      {formatTime(note.updatedAt)}
+                    </div>
+
+                    <p className="text-gray-700 mb-4 whitespace-pre-line">
+                      {note.content}
+                    </p>
+
+                    {note.imageUrl && (
+                      <div className="mb-4 rounded-xl overflow-hidden">
+                        <img
+                          src={note.imageUrl}
+                          alt="Catatan kehamilan"
+                          className="w-full h-48 object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {note.emotion && (
+                      <div className="flex items-center mt-4 pt-4 border-t border-gray-100">
+                        <span className="text-2xl mr-2">
+                          {emotionIcons[note.emotion] || '😐'}
+                        </span>
+                        <span className="text-sm text-gray-600 capitalize">
+                          {note.emotion}
+                        </span>
+                      </div>
+                    )}
+
+                    {note.symptoms && note.symptoms.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <h3 className="text-[#EE6983] font-bold mb-2">Gejala yang Dirasakan</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {defaultSymptoms
+                            .filter(symptom => note.symptoms.includes(symptom.id))
+                            .map(symptom => (
+                              <span
+                                key={symptom.id}
+                                className="inline-flex items-center bg-[#FFE4E9] text-[#EE6983] px-3 py-1 rounded-full text-sm"
+                              >
+                                <span className="mr-1">{symptom.emoji}</span>
+                                {symptom.name}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm p-6">
-              <BookOpen className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-6">Tidak ada catatan untuk hari ini</p>
+            ) : (
+              <div className="text-center py-12 bg-white rounded-xl shadow-sm p-6">
+                <BookOpen className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500 mb-6">Tidak ada catatan untuk hari ini</p>
+                <Link
+                  href="/pages/ceritamooma/notes"
+                  className="inline-flex items-center bg-[#B13455] hover:bg-[#EE6983] text-white px-6 py-2 rounded-full text-sm font-medium transition-colors"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Buat Catatan Baru
+                </Link>
+              </div>
+            )}
+
+            {/* Fixed button at bottom right */}
+            <div className="fixed bottom-6 right-6">
               <Link
                 href="/pages/ceritamooma/notes"
-                className="inline-flex items-center bg-[#B13455] hover:bg-[#EE6983] text-white px-6 py-2 rounded-full text-sm font-medium transition-colors"
+                className="bg-[#B13455] hover:bg-[#EE6983] text-white p-3 rounded-full shadow-lg flex items-center justify-center"
               >
-                <Plus className="w-4 h-4 mr-1" />
-                Buat Catatan Baru
+                <Plus className="w-6 h-6" />
               </Link>
             </div>
-        )}
-        
-        {/* Fixed button at bottom right */}
-        <div className="fixed bottom-6 right-6">
-          <Link
-            href="/pages/ceritamooma/notes"
-            className="bg-[#B13455] hover:bg-[#EE6983] text-white p-3 rounded-full shadow-lg flex items-center justify-center"
-          >
-            <Plus className="w-6 h-6" />
-          </Link>
+          </main>
         </div>
-      </main>
-    </div>
-    )}</div>
-  )};
-
+      )}</div>
+  );
+}

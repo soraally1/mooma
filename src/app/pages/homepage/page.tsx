@@ -142,7 +142,7 @@ export default function Homepage() {
                   return `/size/${closestWeek}.webp`;
                 })()}
                 alt={`Pregnancy Week ${pregnancyMetrics?.pregnancyWeek || 0}`}
-                className="w-72 h-72 lg:w-100 lg:h-100 object-contain drop-shadow-2xl"
+                className="w-56 h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain drop-shadow-2xl"
               />
             </div>
 
@@ -177,7 +177,7 @@ export default function Homepage() {
           {/* Right - Content */}
           <div className="text-white">
             <p className="text-sm lg:text-base font-semibold mb-2 opacity-90 animate-fade-in">Aku akan lahir</p>
-            <h2 className="text-5xl lg:text-6xl font-black mb-2 leading-tight animate-fade-in-delay-1">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-2 leading-tight animate-fade-in-delay-1">
               {loading ? (
                 <span className="inline-block animate-pulse">...</span>
               ) : (
@@ -185,7 +185,7 @@ export default function Homepage() {
                   <span className="bg-linear-to-r from-white to-yellow-100 bg-clip-text text-transparent">
                     {pregnancyMetrics?.daysRemaining || 0}
                   </span>
-                  <span className="text-3xl lg:text-4xl ml-2">Hari lagi</span>
+                  <span className="text-2xl md:text-3xl lg:text-4xl ml-2">Hari lagi</span>
                 </>
               )}
             </h2>
@@ -194,21 +194,21 @@ export default function Homepage() {
             </p>
 
             {/* Health Metrics Cards */}
-            <div className="grid grid-cols-3 gap-3 lg:gap-4">
+            <div className="grid grid-cols-3 gap-2 md:gap-3 lg:gap-4">
               {/* Berat Mooma Card */}
-              <div className="bg-[#FFF5E4] rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 animate-fade-in-delay-3">
+              <div className="bg-[#FFF5E4] rounded-xl md:rounded-2xl lg:rounded-3xl p-3 md:p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 animate-fade-in-delay-3">
                 <p className="text-[#B13455] text-xs lg:text-sm font-semibold mb-2 lg:mb-3">Berat mooma</p>
-                <p className="text-[#B13455] text-2xl lg:text-4xl font-black">
+                <p className="text-[#B13455] text-2xl md:text-3xl lg:text-4xl font-black">
                   {loading ? <Loader className="w-6 h-6 animate-spin" /> : pregnancyData.currentBodyWeight || '-'}
                   <span className="text-sm lg:text-lg ml-1 font-semibold">kg</span>
                 </p>
               </div>
 
               {/* Status Kehamilan Card */}
-              <div className="bg-[#FFF5E4] rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border-4 border-white animate-fade-in-delay-4">
+              <div className="bg-[#FFF5E4] rounded-xl md:rounded-2xl lg:rounded-3xl p-3 md:p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border-2 md:border-4 border-white animate-fade-in-delay-4">
                 <p className="text-[#B13455] text-xs lg:text-sm font-semibold mb-2 lg:mb-3">Status Kehamilan</p>
                 <div className="flex flex-col gap-1">
-                  <p className="text-[#B13455] text-2xl lg:text-3xl font-black">
+                  <p className="text-[#B13455] text-xl md:text-2xl lg:text-3xl font-black">
                     {loading ? <Loader className="w-6 h-6 animate-spin" /> : pregnancyData.gravidaParityAbortus || '-'}
                   </p>
                   {pregnancyData.pregnancyWeek}
@@ -216,10 +216,10 @@ export default function Homepage() {
               </div>
 
               {/* Usia Janin Card */}
-              <div className="bg-[#FFF5E4] rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 animate-fade-in-delay-5">
+              <div className="bg-[#FFF5E4] rounded-xl md:rounded-2xl lg:rounded-3xl p-3 md:p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 animate-fade-in-delay-5">
                 <p className="text-[#B13455] text-xs lg:text-sm font-semibold mb-2 lg:mb-3">Usia Janin</p>
                 <div className="flex flex-col gap-1">
-                  <p className="text-[#B13455] text-2xl lg:text-3xl font-black">
+                  <p className="text-[#B13455] text-xl md:text-2xl lg:text-3xl font-black">
                     {loading ? (
                       <Loader className="w-6 h-6 animate-spin" />
                     ) : (
@@ -253,23 +253,23 @@ export default function Homepage() {
             <Zap className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
             <h3 className="text-white font-black text-2xl lg:text-3xl">Fitur Unggulan</h3>
           </div>
-          <div className="grid grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
               { icon: ChefHat, label: 'Resep Mooma', delay: 'delay-0' },
               { icon: Apple, label: 'Nutrisi Mooma', delay: 'delay-100' },
-              { icon: Stethoscope, label: 'Konsultasi Mooma', delay: 'delay-200' },
+              { icon: Stethoscope, label: 'Cerita Mooma', delay: 'delay-200' },
               { icon: Heart, label: 'Mooma Sehat', delay: 'delay-300' },
             ].map((feature, idx) => (
               <div
                 key={idx}
-                className={`flex flex-col items-center gap-4 cursor-pointer group animate-fade-in ${feature.delay}`}
+                className={`flex flex-col items-center gap-3 md:gap-4 cursor-pointer group animate-fade-in ${feature.delay} flex-shrink-0 w-28 md:w-auto`}
               >
                 {/* Icon Box */}
-                <div className="bg-white rounded-3xl p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-2">
-                  <feature.icon className="w-10 h-10 lg:w-14 lg:h-14 text-[#EE6983] gtransition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
+                <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-2">
+                  <feature.icon className="w-8 h-8 md:w-10 md:h-10 lg:w-14 lg:h-14 text-[#EE6983] transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
                 </div>
                 {/* Text Label */}
-                <p className="text-white text-sm lg:text-base text-center font-bold leading-tight">
+                <p className="text-white text-xs md:text-sm lg:text-base text-center font-bold leading-tight">
                   {feature.label}
                 </p>
               </div>
@@ -286,17 +286,17 @@ export default function Homepage() {
             <h3 className="font-black text-2xl lg:text-3xl text-[#B13455]">Olahraga yuk mooma</h3>
           </div>
           <div className="relative">
-            <div className="rounded-3xl lg:rounded-4xl p-8 lg:p-12 text-white shadow-2xl lg:shadow-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1" style={{ backgroundColor: '#EE6983', paddingRight: '12rem' }}>
+            <div className="rounded-2xl md:rounded-3xl lg:rounded-[2rem] p-6 md:p-8 lg:p-12 pr-32 md:pr-40 lg:pr-52 text-white shadow-xl md:shadow-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-1" style={{ backgroundColor: '#EE6983' }}>
               <div className="max-w-xs">
-                <p className="text-lg lg:text-2xl font-bold mb-6 lg:mb-8 leading-relaxed">Mulai olahraga untuk menjaga kesehatan Mooma dan bayi!</p>
-                <button className="bg-white text-[#EE6983] font-black py-3 lg:py-4 px-8 rounded-2xl hover:bg-yellow-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95">
+                <p className="text-base md:text-lg lg:text-2xl font-bold mb-4 md:mb-6 lg:mb-8 leading-relaxed">Mulai olahraga untuk menjaga kesehatan Mooma dan bayi!</p>
+                <button className="bg-white text-[#EE6983] font-black py-2.5 md:py-3 lg:py-4 px-6 md:px-8 rounded-xl md:rounded-2xl hover:bg-yellow-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 text-sm md:text-base">
                   Mulai olahraga
                 </button>
               </div>
             </div>
 
             {/* Overlapping Image - Aligned at bottom */}
-            <div className="absolute -right-8 bottom-0 lg:-right-12 w-60 h-60 lg:w-80 lg:h-80 pointer-events-none transform hover:scale-110 transition-transform duration-300">
+            <div className="absolute -right-4 md:-right-8 lg:-right-12 bottom-0 w-40 h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 pointer-events-none">
               <img src="/olahraga.svg" alt="Olahraga" className="w-full h-full object-contain " />
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function Homepage() {
             <h3 className="font-black text-2xl lg:text-3xl text-[#B13455]">Momma binggung apa mau masak apa?</h3>
           </div>
           <p className="text-[#B13455] text-sm lg:text-base mb-8 lg:mb-12 font-medium">Binggung mau masak apa hari ini? Yuk, cari resep sehat yang gizi.</p>
-          <div className="grid grid-cols-3 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="grid grid-cols-3 gap-3 md:gap-4 lg:gap-6">
             {[
               { icon: BookOpen, label: 'Buat resep', color: '#EE6983' },
               { icon: BookOpen, label: 'Cari resep', color: '#E26884' },
@@ -319,10 +319,10 @@ export default function Homepage() {
             ].map((recipe, idx) => (
               <button
                 key={idx}
-                className="rounded-3xl p-6 lg:p-8 text-white text-sm lg:text-base font-black shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col items-center gap-3 lg:gap-4 h-36 lg:h-44 justify-center transform hover:scale-110 hover:-translate-y-2 active:scale-95 group"
+                className="rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 text-white text-xs md:text-sm lg:text-base font-black shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col items-center gap-2 md:gap-3 lg:gap-4 h-28 md:h-36 lg:h-44 justify-center transform hover:scale-105 hover:-translate-y-2 active:scale-95 group"
                 style={{ backgroundColor: recipe.color }}
               >
-                <recipe.icon className="w-8 h-8 lg:w-10 lg:h-10 transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
+                <recipe.icon className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" />
                 <span>{recipe.label}</span>
               </button>
             ))}

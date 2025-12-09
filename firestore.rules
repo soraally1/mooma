@@ -163,6 +163,30 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
                    request.resource.data.userId == request.auth.uid;
     }
+
+    // Journal Notes Collection (CeritaMooma)
+    match /journalNotes/{noteId} {
+      allow read, update, delete: if isAuthenticated() && 
+                                 resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
+    }
+
+    // Oona Conversations Collection (CeritaMooma Chat)
+    match /oonaConversations/{conversationId} {
+      allow read, update, delete: if isAuthenticated() && 
+                                 resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
+    }
+
+    // Nutrition Logs Collection
+    match /nutritionLogs/{logId} {
+      allow read, update, delete: if isAuthenticated() && 
+                                 resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
+    }
     
     // Default deny all other documents
     match /{document=**} {
@@ -170,3 +194,4 @@ service cloud.firestore {
     }
   }
 }
+

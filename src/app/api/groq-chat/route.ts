@@ -66,7 +66,37 @@ const auth = getAuth(app);
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-const SYSTEM_PROMPT = `Kamu adalah asisten AI yang membantu ibu hamil mengumpulkan informasi lengkap tentang kehamilannya. Nama kamu adalah Mooma Assistant.
+// Generate current date dynamically
+const getCurrentDateInfo = () => {
+  const now = new Date();
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Asia/Jakarta'
+  };
+  const formattedDate = now.toLocaleDateString('id-ID', options);
+  const isoDate = now.toISOString().split('T')[0];
+  return { formattedDate, isoDate };
+};
+
+const getSystemPrompt = () => {
+  const { formattedDate, isoDate } = getCurrentDateInfo();
+
+  return `Kamu adalah asisten AI yang membantu ibu hamil mengumpulkan informasi lengkap tentang kehamilannya. Nama kamu adalah Mooma Assistant.
+
+INFORMASI WAKTU REALTIME:
+- Tanggal hari ini: ${formattedDate}
+- Format ISO: ${isoDate}
+- Gunakan informasi ini untuk memvalidasi tanggal HPHT (Hari Pertama Haid Terakhir) dari pengguna.
+- HPHT yang valid biasanya antara 1-42 minggu sebelum tanggal hari ini.
+
+PERINGATAN PENTING TENTANG KELENGKAPAN DATA:
+- JANGAN PERNAH mengatakan "Data telah lengkap" atau "Terima kasih telah memberikan semua informasi" KECUALI kamu sudah menanyakan dan mendapatkan jawaban untuk SEMUA 21 informasi.
+- Jika pengguna hanya menjawab beberapa pertanyaan, LANJUTKAN bertanya. JANGAN berhenti di tengah jalan.
+- Hitung berapa informasi yang sudah terkumpul. Jika kurang dari 21, TERUS bertanya.
+- JANGAN terpancing oleh kata-kata pengguna seperti "lanjutkan" atau "sudah" - pastikan benar-benar lengkap.
 
 INSTRUKSI PENTING:
 1. Tanyakan SEMUA informasi yang diperlukan SATU PER SATU. JANGAN memborong pertanyaan.
@@ -115,13 +145,16 @@ STRATEGI PERCAKAPAN:
 - Berikan pujian atau dukungan setelah pengguna menjawab (misal: "Wah, bagus sekali Bunda rajin olahraga!").
 
 PENYELESAIAN:
-- Hanya tandai isComplete: true setelah SEMUA 21 informasi telah dikumpulkan.
-- Ucapkan "Data telah lengkap" atau "Terima kasih telah memberikan semua informasi".
+- HANYA tandai isComplete: true setelah MINIMAL 15 informasi INTI telah dikumpulkan (name, age, height, prePregnancyWeight, bloodType, lastMenstrualPeriod, gravidaParityAbortus, currentWeight/currentBodyWeight, bloodPressure, drugAllergies, foodAllergies, medicalHistory, currentMedications, mood, complaints).
+- Ucapkan "Data telah lengkap" HANYA setelah benar-benar menanyakan semua informasi penting.
+- Jika ragu apakah sudah lengkap, TERUS bertanya.
 
 LARANGAN KERAS:
-- JANGAN PERNAH memberikan ringkasan data ("Data yang dikumpulkan sejauh ini...") jika belum semua 21 informasi terkumpul.
-- JANGAN berhenti bertanya sebelum 21 informasi lengkap.
+- JANGAN PERNAH mengatakan "Data telah lengkap" sebelum MINIMAL 15 pertanyaan dijawab.
+- JANGAN PERNAH memberikan ringkasan data jika belum lengkap.
+- JANGAN berhenti bertanya hanya karena pengguna bilang "lanjutkan" atau "sudah".
 - JANGAN membuat asumsi data jika pengguna tidak menyebutkannya.
+- JANGAN menganggap percakapan selesai jika pengguna hanya menjawab 5-10 pertanyaan.
 
 FORMAT RESPONS (WAJIB JSON - SELALU GUNAKAN FORMAT INI):
 {
@@ -159,6 +192,7 @@ PENTING:
 - HANYA isi field yang telah diekstrak dari jawaban pengguna.
 - JANGAN mengarang data.
 - Gunakan bahasa Indonesia yang hangat, ramah, dan mudah dimengerti.`;
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -197,6 +231,36 @@ export async function POST(request: NextRequest) {
       messages.unshift(...conversationHistory);
     }
 
+    // Build context about what data has been collected
+    const REQUIRED_FIELDS = [
+      'name', 'age', 'height', 'prePregnancyWeight', 'bloodType',
+      'drugAllergies', 'foodAllergies',
+      'lastMenstrualPeriod', 'estimatedDueDate', 'pregnancyWeek',
+      'gravidaParityAbortus', 'medicalHistory', 'previousPregnancyComplications',
+      'currentMedications', 'currentHealthConditions', 'bloodPressure', 'exerciseFrequency',
+      'mood', 'complaints', 'currentBodyWeight', 'babyMovement', 'additionalNotes'
+    ];
+
+    const collectedFields = REQUIRED_FIELDS.filter(field => {
+      const value = pregnancyData?.[field];
+      return value !== null && value !== undefined && value !== '';
+    });
+
+    const missingFieldsForPrompt = REQUIRED_FIELDS.filter(field => !collectedFields.includes(field));
+
+    const dataContextMessage = `
+KONTEKS DATA SAAT INI (PENTING - BACA INI):
+- Data yang SUDAH terkumpul (${collectedFields.length}/21): ${collectedFields.length > 0 ? collectedFields.join(', ') : 'BELUM ADA'}
+- Data yang BELUM terkumpul (${missingFieldsForPrompt.length}): ${missingFieldsForPrompt.join(', ')}
+
+${collectedFields.length < 12 ? `⚠️ PERINGATAN: Baru ${collectedFields.length} dari 21 data yang terkumpul. JANGAN katakan data lengkap. TERUS tanyakan field yang belum ada.` : ''}
+${collectedFields.length >= 12 && collectedFields.length < 21 ? `⚠️ Sudah ${collectedFields.length} data, masih perlu ${21 - collectedFields.length} lagi. Lanjutkan bertanya.` : ''}
+${collectedFields.length >= 21 ? '✓ Semua data sudah lengkap! Boleh selesaikan percakapan.' : ''}
+`;
+
+    console.log(`📊 Sending context to AI: ${collectedFields.length}/21 fields collected`);
+    console.log(`📋 Missing fields: ${missingFieldsForPrompt.join(', ')}`);
+
     // Call Groq API
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -209,7 +273,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: SYSTEM_PROMPT,
+            content: getSystemPrompt() + dataContextMessage,
           },
           ...messages,
         ],
@@ -289,49 +353,72 @@ export async function POST(request: NextRequest) {
     // Merge existing data with newly extracted data to check for completeness
     const accumulatedData = { ...pregnancyData, ...extractedData };
 
-    // Define all 21 required fields
-    const REQUIRED_FIELDS = [
-      'name', 'age', 'height', 'prePregnancyWeight', 'bloodType',
-      'drugAllergies', 'foodAllergies',
-      'lastMenstrualPeriod', 'estimatedDueDate', 'pregnancyWeek',
-      'gravidaParityAbortus', 'medicalHistory', 'previousPregnancyComplications',
-      'currentMedications', 'currentHealthConditions', 'bloodPressure', 'exerciseFrequency',
-      'mood', 'complaints', 'currentBodyWeight', 'babyMovement', 'additionalNotes'
+    // REQUIRED_FIELDS already defined above - reuse the same reference
+
+    // Check if all required fields are present
+    // IMPORTANT: A field is considered "answered" if:
+    // 1. It has a non-null, non-undefined value, OR
+    // 2. It exists as a key in extractedData (even with null value - meaning user answered "none/tidak ada")
+
+    // Fields that can be null but are "optional" (user can skip)
+    const OPTIONAL_FIELDS = [
+      'additionalNotes',      // User might not have extra notes
+      'previousPregnancyComplications', // Only relevant for multiparous
+      'estimatedDueDate',     // Can be calculated from HPHT
+      'pregnancyWeek',        // Can be calculated from HPHT
     ];
 
-    // Check if all required fields are present and not null/undefined
-    // Note: Empty strings might be valid answers (e.g. "None"), but null/undefined means not asked/answered
-
-    // Some fields might be optional or skipped by the user (e.g. "None")
-    // We should allow them to be null/undefined if the AI considers the conversation complete
-    const OPTIONAL_FIELDS = [
-      'additionalNotes',
-      'complaints',
-      'medicalHistory',
-      'previousPregnancyComplications',
+    // Fields where "null" is a valid answer (e.g., "no allergies", "no medical history")
+    const NULLABLE_FIELDS = [
       'drugAllergies',
       'foodAllergies',
+      'medicalHistory',
+      'previousPregnancyComplications',
       'currentMedications',
       'currentHealthConditions',
-      // Expanded optional fields to prevent stuck state
-      'babyMovement',
-      'mood',
-      'exerciseFrequency',
-      'estimatedDueDate', // Can be calculated from HPHT
-      'pregnancyWeek',    // Can be calculated from HPHT
-      'gravidaParityAbortus',
-      'currentBodyWeight'
+      'additionalNotes',
     ];
 
-    const missingFields = REQUIRED_FIELDS.filter(field => {
-      const value = accumulatedData[field];
-      // If it's an optional field, we don't count it as missing for the purpose of blocking completion
-      if (OPTIONAL_FIELDS.includes(field)) return false;
+    // Count how many fields are actually filled (has value OR was explicitly set to null in extractedData)
+    const answeredFields = REQUIRED_FIELDS.filter(field => {
+      const accValue = accumulatedData[field];
+      const extractedValue = extractedData[field];
 
-      return value === null || value === undefined;
+      // Field is answered if:
+      // 1. It has a non-null, non-empty value in accumulated data
+      // 2. OR it was explicitly extracted (even if null) - meaning the question was asked
+      const hasValue = accValue !== undefined && accValue !== null && accValue !== '';
+      const wasExtractedAsNull = field in extractedData && extractedValue === null && NULLABLE_FIELDS.includes(field);
+
+      return hasValue || wasExtractedAsNull;
     });
 
-    const isDataComplete = missingFields.length === 0;
+    const filledFieldsCount = answeredFields.length;
+
+    const missingFields = REQUIRED_FIELDS.filter(field => {
+      // If it's an optional field, don't count as missing
+      if (OPTIONAL_FIELDS.includes(field)) return false;
+
+      const accValue = accumulatedData[field];
+      const extractedValue = extractedData[field];
+
+      // Field is NOT missing if:
+      // 1. It has a real value
+      // 2. OR it's a nullable field that was explicitly set to null
+      const hasValue = accValue !== undefined && accValue !== null && accValue !== '';
+      const isNullableAndAnswered = NULLABLE_FIELDS.includes(field) && (field in extractedData || field in pregnancyData);
+
+      return !hasValue && !isNullableAndAnswered;
+    });
+
+    // Require at least 12 core fields to be filled before allowing completion
+    const MIN_REQUIRED_FIELDS = 12;
+    const isDataComplete = missingFields.length === 0 && filledFieldsCount >= MIN_REQUIRED_FIELDS;
+
+    console.log(`📊 Data status: ${filledFieldsCount}/${REQUIRED_FIELDS.length} fields answered, ${missingFields.length} missing`);
+    if (missingFields.length > 0) {
+      console.log(`📋 Still missing: ${missingFields.join(', ')}`);
+    }
 
     // Only mark as complete if BOTH keywords are present AND data is actually complete
     // OR if the AI explicitly set isComplete to true in JSON AND data is complete

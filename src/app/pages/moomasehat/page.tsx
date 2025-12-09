@@ -2,43 +2,24 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { PoseLandmarker, FilesetResolver, DrawingUtils, NormalizedLandmark } from '@mediapipe/tasks-vision';
-import { Play, Pause, RotateCcw, Trophy, Activity, Camera, AlertCircle, ArrowLeft, Check } from 'lucide-react';
+import {
+    Play, Activity, ArrowLeft, Sparkles, Clock, Zap, Baby, Heart,
+    ChevronLeft, ChevronRight, Lightbulb, Wind, Dumbbell, StretchHorizontal
+} from 'lucide-react';
 import HomepageNavbar from '@/app/components/homepage-navbar';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { exerciseLibrary, Exercise, ExerciseValidation } from '@/app/lib/exercise-library';
-import { ValueSmoother } from '@/app/lib/pose-utils';
-import toast from 'react-hot-toast';
+import { doc, getDoc } from 'firebase/firestore';
+import { exerciseLibrary, Exercise } from '@/app/lib/exercise-library';
 
 export default function MoomaSehatPage() {
     const router = useRouter();
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
-    const [isModelLoading, setIsModelLoading] = useState(true);
-    const [isCameraReady, setIsCameraReady] = useState(false);
-    const [cameraError, setCameraError] = useState<string | null>(null);
-
-    // Exercise state
-    const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-    const [isExercising, setIsExercising] = useState(false);
-    const [repCount, setRepCount] = useState(0);
-    const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
-    const [currentValidation, setCurrentValidation] = useState<ExerciseValidation | null>(null);
-
-    // Rep detection state
-    const [isInPosition, setIsInPosition] = useState(false);
-    const [lastRepTime, setLastRepTime] = useState(0);
-
-    // User data
     const [userName, setUserName] = useState('Mooma');
-    const [trimester, setTrimester] = useState<1 | 2 | 3>(2);
+    const [userTrimester, setUserTrimester] = useState<1 | 2 | 3>(2);
+    const [pregnancyWeek, setPregnancyWeek] = useState(20);
+    const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<1 | 2 | 3>(2);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Smoothers for stable measurements
-    const smootherRef = useRef(new ValueSmoother(5));
-
-    // Load user data
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (!user) {
@@ -54,472 +35,279 @@ export default function MoomaSehatPage() {
                     const data = docSnap.data();
                     setUserName(data.name || 'Mooma');
 
-                    // Calculate trimester from pregnancy week
                     const week = data.pregnancyWeek || 20;
-                    if (week <= 13) setTrimester(1);
-                    else if (week <= 26) setTrimester(2);
-                    else setTrimester(3);
+                    setPregnancyWeek(week);
+
+                    let trimester: 1 | 2 | 3 = 2;
+                    if (week <= 13) trimester = 1;
+                    else if (week <= 27) trimester = 2;
+                    else trimester = 3;
+
+                    setUserTrimester(trimester);
+                    setActiveTab(trimester);
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error);
+            } finally {
+                setIsLoading(false);
             }
         });
 
         return () => unsubscribe();
     }, [router]);
 
-    // Initialize MediaPipe Pose Landmarker
-    useEffect(() => {
-        const initializePoseLandmarker = async () => {
-            try {
-                const vision = await FilesetResolver.forVisionTasks(
-                    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm'
-                );
+    const trimester1Exercises = exerciseLibrary.filter(ex => ['diaphragmatic-breathing', 'seated-cat-cow', 'scapular-retraction'].includes(ex.id));
+    const trimester2Exercises = exerciseLibrary.filter(ex => ['pelvic-tilt', 'seated-row', 'side-bend'].includes(ex.id));
+    const trimester3Exercises = exerciseLibrary.filter(ex => ['labor-breathing', 'butterfly-sitting', 'arm-circles'].includes(ex.id));
 
-                const landmarker = await PoseLandmarker.createFromOptions(vision, {
-                    baseOptions: {
-                        modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-                        delegate: 'GPU',
-                    },
-                    runningMode: 'VIDEO',
-                    numPoses: 1,
-                    minPoseDetectionConfidence: 0.5,
-                    minPosePresenceConfidence: 0.5,
-                    minTrackingConfidence: 0.5,
-                });
-
-                setPoseLandmarker(landmarker);
-                setIsModelLoading(false);
-                console.log('Pose Landmarker initialized');
-            } catch (error) {
-                console.error('Error initializing Pose Landmarker:', error);
-                setCameraError('Gagal memuat model AI. Silakan refresh halaman.');
-                setIsModelLoading(false);
-            }
-        };
-
-        initializePoseLandmarker();
-    }, []);
-
-    // Initialize camera
-    useEffect(() => {
-        const initializeCamera = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
-                        facingMode: 'user',
-                    },
-                });
-
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.onloadedmetadata = () => {
-                        videoRef.current?.play();
-                        setIsCameraReady(true);
-                    };
-                }
-            } catch (error) {
-                console.error('Error accessing camera:', error);
-                setCameraError('Tidak dapat mengakses kamera. Pastikan izin kamera diaktifkan.');
-            }
-        };
-
-        if (!isModelLoading && poseLandmarker) {
-            initializeCamera();
-        }
-
-        return () => {
-            // Cleanup camera on unmount
-            if (videoRef.current?.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, [isModelLoading, poseLandmarker]);
-
-    // Main pose detection loop
-    useEffect(() => {
-        if (!poseLandmarker || !isCameraReady || !videoRef.current || !canvasRef.current) {
-            return;
-        }
-
-        let animationFrameId: number;
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-
-        if (!ctx) return;
-
-        const detectPose = async () => {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                // Set canvas size to match video
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-
-                // Draw video frame (mirrored for selfie view)
-                ctx.save();
-                ctx.scale(-1, 1);
-                ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-                ctx.restore();
-
-                // Detect pose
-                const startTimeMs = performance.now();
-                const results = poseLandmarker.detectForVideo(video, startTimeMs);
-
-                // Draw pose landmarks
-                if (results.landmarks && results.landmarks.length > 0) {
-                    const landmarks = results.landmarks[0];
-
-                    // Validate exercise if one is selected
-                    if (selectedExercise && isExercising) {
-                        const validation = selectedExercise.validate(landmarks);
-                        setCurrentValidation(validation);
-
-                        // Rep counting logic
-                        detectRep(validation.isCorrect);
-                    }
-
-                    // Draw the pose
-                    drawPose(ctx, landmarks, canvas.width, canvas.height);
-                }
-            }
-
-            animationFrameId = requestAnimationFrame(detectPose);
-        };
-
-        detectPose();
-
-        return () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-        };
-    }, [poseLandmarker, isCameraReady, selectedExercise, isExercising]);
-
-    // Rep detection with state machine
-    const detectRep = (isCorrectPosition: boolean) => {
-        const now = Date.now();
-
-        // Debounce: at least 800ms between reps
-        if (now - lastRepTime < 800) return;
-
-        if (isCorrectPosition && !isInPosition) {
-            // Transitioning into correct position
-            setIsInPosition(true);
-            setRepCount(prev => prev + 1);
-            setLastRepTime(now);
-            toast.success('✅ Rep selesai!', { duration: 1000 });
-        } else if (!isCorrectPosition && isInPosition) {
-            // Transitioning out of correct position
-            setIsInPosition(false);
+    const getCurrentExercises = () => {
+        switch (activeTab) {
+            case 1: return trimester1Exercises;
+            case 2: return trimester2Exercises;
+            case 3: return trimester3Exercises;
         }
     };
 
-    // Draw pose on canvas
-    const drawPose = (
-        ctx: CanvasRenderingContext2D,
-        landmarks: NormalizedLandmark[],
-        width: number,
-        height: number
-    ) => {
-        const drawingUtils = new DrawingUtils(ctx);
-
-        // Draw connectors
-        const connections = [
-            [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Arms
-            [11, 23], [12, 24], [23, 24], // Torso
-            [23, 25], [25, 27], [24, 26], [26, 28], // Legs
-        ];
-
-        ctx.save();
-        ctx.scale(-1, 1);
-        ctx.translate(-width, 0);
-
-        for (const [start, end] of connections) {
-            const startLandmark = landmarks[start];
-            const endLandmark = landmarks[end];
-
-            ctx.beginPath();
-            ctx.moveTo(startLandmark.x * width, startLandmark.y * height);
-            ctx.lineTo(endLandmark.x * width, endLandmark.y * height);
-            ctx.strokeStyle = '#EE6983';
-            ctx.lineWidth = 4;
-            ctx.stroke();
+    const getTrimesterInfo = () => {
+        switch (activeTab) {
+            case 1: return {
+                title: 'Trimester 1',
+                subtitle: '0-13 Minggu',
+                desc: 'Fokus pada stabilisasi, teknik pernapasan, dan postur dasar.'
+            };
+            case 2: return {
+                title: 'Trimester 2',
+                subtitle: '14-27 Minggu',
+                desc: 'Memperkuat otot punggung dan panggul untuk mendukung pertumbuhan bayi.'
+            };
+            case 3: return {
+                title: 'Trimester 3',
+                subtitle: '28+ Minggu',
+                desc: 'Latihan relaksasi dan persiapan persalinan.'
+            };
         }
+    };
 
-        // Draw landmarks
-        for (let i = 11; i <= 28; i++) {
-            const landmark = landmarks[i];
-            const x = landmark.x * width;
-            const y = landmark.y * height;
-
-            // Color based on validation status
-            let color = '#EE6983'; // Default pink
-            if (currentValidation && isExercising) {
-                color = currentValidation.isCorrect ? '#4ade80' : '#ef4444'; // Green or red
-            }
-
-            ctx.beginPath();
-            ctx.arc(x, y, 8, 0, 2 * Math.PI);
-            ctx.fillStyle = color;
-            ctx.fill();
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+    const scroll = (direction: 'left' | 'right') => {
+        if (scrollContainerRef.current) {
+            const scrollAmount = 380;
+            scrollContainerRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
         }
-
-        ctx.restore();
     };
 
-    // Start exercise
-    const startExercise = (exercise: Exercise) => {
-        setSelectedExercise(exercise);
-        setIsExercising(true);
-        setRepCount(0);
-        setSessionStartTime(Date.now());
-        setIsInPosition(false);
-        toast.success(`Mulai: ${exercise.name}`);
-    };
-
-    // Pause/Resume exercise
-    const togglePauseExercise = () => {
-        setIsExercising(!isExercising);
-        toast(isExercising ? 'Jeda' : 'Lanjut');
-    };
-
-    // End exercise and save to Firebase
-    const endExercise = async () => {
-        if (!selectedExercise || !sessionStartTime) return;
-
-        const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
-        const accuracy = currentValidation?.isCorrect ? 100 : 80; // Simplified
-
-        try {
-            const user = auth.currentUser;
-            if (user) {
-                await addDoc(collection(db, 'pregnancyData', user.uid, 'exerciseHistory'), {
-                    exerciseType: selectedExercise.name,
-                    duration,
-                    repsCompleted: repCount,
-                    accuracy,
-                    feedback: currentValidation?.feedback || [],
-                    timestamp: serverTimestamp(),
-                });
-                toast.success('Sesi disimpan!');
-            }
-        } catch (error) {
-            console.error('Error saving exercise:', error);
-            toast.error('Gagal menyimpan sesi');
+    const getDifficultyIcon = (difficulty: string) => {
+        switch (difficulty) {
+            case 'easy': return <Wind className="w-4 h-4" />;
+            case 'medium': return <Dumbbell className="w-4 h-4" />;
+            default: return <Zap className="w-4 h-4" />;
         }
-
-        // Reset state
-        setSelectedExercise(null);
-        setIsExercising(false);
-        setRepCount(0);
-        setSessionStartTime(null);
-        setCurrentValidation(null);
     };
+
+    const ExerciseCard = ({ exercise, index }: { exercise: Exercise; index: number }) => (
+        <div
+            className="group flex-shrink-0 w-[340px] lg:w-[360px] bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+        >
+            {/* Card Header - Placeholder for mascot icon */}
+            <div className={`relative h-28 flex items-center justify-center ${exercise.difficulty === 'easy' ? 'bg-gradient-to-br from-emerald-50 to-teal-100' :
+                    exercise.difficulty === 'medium' ? 'bg-gradient-to-br from-amber-50 to-orange-100' :
+                        'bg-gradient-to-br from-rose-50 to-pink-100'
+                }`}>
+                {/* Mascot placeholder - replace with your mascot image */}
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${exercise.difficulty === 'easy' ? 'bg-emerald-200/50 text-emerald-600' :
+                        exercise.difficulty === 'medium' ? 'bg-amber-200/50 text-amber-600' :
+                            'bg-rose-200/50 text-rose-600'
+                    }`}>
+                    <StretchHorizontal className="w-8 h-8" />
+                </div>
+
+                {/* Difficulty Badge */}
+                <div className={`absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${exercise.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-700' :
+                        exercise.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-700' :
+                            'bg-rose-500/10 text-rose-700'
+                    }`}>
+                    {getDifficultyIcon(exercise.difficulty)}
+                    <span>{exercise.difficulty === 'easy' ? 'Mudah' : exercise.difficulty === 'medium' ? 'Sedang' : 'Sulit'}</span>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-5">
+                <h3 className="text-base font-bold text-gray-800 mb-1.5 group-hover:text-[#EE6983] transition-colors">
+                    {exercise.name}
+                </h3>
+                <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
+                    {exercise.description}
+                </p>
+
+                {/* Stats Row */}
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-lg">
+                        <Zap className="h-3.5 w-3.5 text-amber-500" />
+                        <span>{exercise.targetReps ? `${exercise.targetReps} Rep` : `${exercise.duration}s`}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-lg">
+                        <Clock className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{Math.ceil((exercise.duration || (exercise.targetReps || 10) * 5) / 60)} menit</span>
+                    </div>
+                </div>
+
+                {/* Action Button */}
+                <button
+                    onClick={() => router.push(`/pages/exercise-session?exercise=${exercise.id}`)}
+                    className="w-full bg-gradient-to-r from-[#EE6983] to-[#D1546A] text-white font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                >
+                    <Play className="h-4 w-4 fill-current" />
+                    Mulai Latihan
+                </button>
+            </div>
+        </div>
+    );
+
+    const trimesterInfo = getTrimesterInfo();
 
     return (
-        <div className="min-h-screen lg:bg-white" style={{ backgroundColor: '#FFF5E4' }}>
+        <div className="min-h-screen bg-[#FDF8F3]">
             <HomepageNavbar />
 
-            {/* Header */}
-            <section className="px-4 lg:px-8 py-8 lg:py-12 relative overflow-hidden" style={{ backgroundColor: '#EE6983' }}>
-                <div className="max-w-7xl mx-auto">
+            {/* Hero Section - Compact */}
+            <section className="bg-gradient-to-r from-[#EE6983] to-[#D1546A] pt-6 pb-16 lg:pt-8 lg:pb-20">
+                <div className="mx-auto max-w-7xl px-4 lg:px-8">
+                    {/* Back Button */}
                     <button
                         onClick={() => router.push('/pages/homepage')}
-                        className="flex items-center gap-2 text-white hover:text-yellow-100 mb-6 transition-all duration-300 hover:scale-105"
+                        className="mb-4 flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm"
                     >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span className="font-semibold">Kembali</span>
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Kembali</span>
                     </button>
 
-                    <div className="text-white">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Activity className="w-10 h-10 lg:w-12 lg:h-12" />
-                            <h1 className="text-4xl lg:text-5xl font-black">MoomaSehat</h1>
+                    {/* Header Content */}
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                        <div className="text-white">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                    <Activity className="h-5 w-5" />
+                                </div>
+                                <h1 className="text-2xl lg:text-3xl font-bold">MoomaSehat</h1>
+                            </div>
+                            <p className="text-white/80 text-sm lg:text-base">
+                                Halo <span className="font-semibold text-white">{userName}</span>, pilih latihan yang sesuai untuk kamu.
+                            </p>
                         </div>
-                        <p className="text-lg lg:text-xl font-medium opacity-90">
-                            Olahraga aman dengan panduan AI untuk Bunda {userName}
-                        </p>
+
+                        {/* Stats */}
+                        <div className="flex gap-3">
+                            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5 flex items-center gap-2.5 border border-white/10">
+                                <Baby className="w-4 h-4 text-white/80" />
+                                <div className="text-white">
+                                    <p className="text-[10px] text-white/60 uppercase tracking-wide">Minggu</p>
+                                    <p className="font-bold text-sm">{pregnancyWeek}</p>
+                                </div>
+                            </div>
+                            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5 flex items-center gap-2.5 border border-white/10">
+                                <Heart className="w-4 h-4 text-white/80" />
+                                <div className="text-white">
+                                    <p className="text-[10px] text-white/60 uppercase tracking-wide">Trimester</p>
+                                    <p className="font-bold text-sm">{userTrimester}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* Main Content */}
-            <section className="px-4 lg:px-8 py-8 lg:py-12 max-w-7xl mx-auto">
-                {isModelLoading && (
-                    <div className="text-center py-20">
-                        <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-[#EE6983] mb-4"></div>
-                        <p className="text-[#B13455] font-semibold text-lg">Memuat AI Model...</p>
+            <section className="mx-auto max-w-7xl px-4 lg:px-8 -mt-8 relative z-10 pb-12">
+                {isLoading ? (
+                    <div className="flex h-40 items-center justify-center">
+                        <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#EE6983]/20 border-t-[#EE6983]"></div>
                     </div>
-                )}
+                ) : (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+                        {/* Trimester Tabs */}
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                            <div className="flex gap-2 bg-gray-100 p-1 rounded-xl w-fit">
+                                {[1, 2, 3].map((t) => (
+                                    <button
+                                        key={t}
+                                        onClick={() => setActiveTab(t as 1 | 2 | 3)}
+                                        className={`relative px-4 lg:px-5 py-2 rounded-lg font-medium text-sm transition-all ${activeTab === t
+                                                ? 'bg-white text-gray-800 shadow-sm'
+                                                : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                    >
+                                        {userTrimester === t && (
+                                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full"></span>
+                                        )}
+                                        Trimester {t}
+                                    </button>
+                                ))}
+                            </div>
 
-                {cameraError && (
-                    <div className="bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center max-w-2xl mx-auto">
-                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-red-700 mb-2">Error Kamera</h3>
-                        <p className="text-red-600">{cameraError}</p>
-                    </div>
-                )}
-
-                {!isModelLoading && !cameraError && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                        {/* Camera Feed */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative">
-                                <div className="relative aspect-video bg-gray-900">
-                                    <video
-                                        ref={videoRef}
-                                        className="absolute inset-0 w-full h-full object-cover"
-                                        playsInline
-                                        style={{ transform: 'scaleX(-1)' }}
-                                    />
-                                    <canvas
-                                        ref={canvasRef}
-                                        className="absolute inset-0 w-full h-full"
-                                    />
-
-                                    {/* Overlay UI */}
-                                    {!isCameraReady && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                                            <div className="text-center text-white">
-                                                <Camera className="w-16 h-16 mx-auto mb-4 animate-pulse" />
-                                                <p className="text-lg font-semibold">Mengaktifkan kamera...</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Rep Counter */}
-                                    {isExercising && selectedExercise && (
-                                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-xl">
-                                            <div className="flex items-center gap-3">
-                                                <Trophy className="w-8 h-8 text-yellow-500" />
-                                                <div>
-                                                    <p className="text-sm text-gray-600 font-semibold">Repetisi</p>
-                                                    <p className="text-3xl font-black text-[#EE6983]">{repCount}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Feedback */}
-                                    {isExercising && currentValidation && (
-                                        <div className="absolute bottom-4 left-4 right-4">
-                                            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl">
-                                                {currentValidation.feedback.map((fb, idx) => (
-                                                    <p key={idx} className="text-sm font-semibold text-[#B13455] mb-1">
-                                                        {fb}
-                                                    </p>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                            {userTrimester === activeTab && (
+                                <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium bg-emerald-50 px-3 py-1.5 rounded-lg w-fit">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Rekomendasi untuk kamu
                                 </div>
+                            )}
+                        </div>
 
-                                {/* Controls */}
-                                {selectedExercise && (
-                                    <div className="p-6 bg-gradient-to-r from-[#EE6983] to-[#B13455] flex items-center justify-between">
-                                        <div className="text-white">
-                                            <p className="text-sm opacity-90">Sedang berlatih</p>
-                                            <p className="text-xl font-bold">{selectedExercise.name}</p>
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={togglePauseExercise}
-                                                className="bg-white text-[#EE6983] p-4 rounded-xl hover:bg-yellow-100 transition-all duration-300 transform hover:scale-110 shadow-lg"
-                                            >
-                                                {isExercising ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                                            </button>
-                                            <button
-                                                onClick={() => setRepCount(0)}
-                                                className="bg-white text-[#EE6983] p-4 rounded-xl hover:bg-yellow-100 transition-all duration-300 transform hover:scale-110 shadow-lg"
-                                            >
-                                                <RotateCcw className="w-6 h-6" />
-                                            </button>
-                                            <button
-                                                onClick={endExercise}
-                                                className="bg-green-500 text-white px-6 py-4 rounded-xl hover:bg-green-600 transition-all duration-300 transform hover:scale-110 shadow-lg font-bold flex items-center gap-2"
-                                            >
-                                                <Check className="w-6 h-6" />
-                                                Selesai
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+                        {/* Section Info */}
+                        <div className="mb-6">
+                            <div className="flex items-baseline gap-2 mb-1">
+                                <h2 className="text-xl lg:text-2xl font-bold text-gray-800">
+                                    {trimesterInfo.title}
+                                </h2>
+                                <span className="text-sm text-gray-400">{trimesterInfo.subtitle}</span>
+                            </div>
+                            <p className="text-sm text-gray-500">{trimesterInfo.desc}</p>
+                        </div>
+
+                        {/* Exercise Cards - Horizontal Scroll */}
+                        <div className="relative">
+                            {/* Scroll Buttons */}
+                            <button
+                                onClick={() => scroll('left')}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-[#EE6983] transition-colors hidden lg:flex border border-gray-100"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => scroll('right')}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-[#EE6983] transition-colors hidden lg:flex border border-gray-100"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+
+                            {/* Cards Container */}
+                            <div
+                                ref={scrollContainerRef}
+                                className="flex gap-4 lg:gap-5 overflow-x-auto pb-2 scroll-smooth"
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            >
+                                {getCurrentExercises().map((exercise, index) => (
+                                    <ExerciseCard key={exercise.id} exercise={exercise} index={index} />
+                                ))}
                             </div>
                         </div>
 
-                        {/* Exercise Selection */}
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-black text-[#B13455] flex items-center gap-2">
-                                <Activity className="w-7 h-7" />
-                                Pilih Latihan
-                            </h2>
-
-                            <div className="space-y-4">
-                                {exerciseLibrary.map((exercise) => (
-                                    <div
-                                        key={exercise.id}
-                                        className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-4 border-transparent hover:border-[#EE6983]/30"
-                                    >
-                                        <div className="flex items-start gap-4">
-                                            <div className="text-4xl">{exercise.icon}</div>
-                                            <div className="flex-1">
-                                                <h3 className="text-lg font-bold text-[#B13455] mb-1">
-                                                    {exercise.name}
-                                                </h3>
-                                                <p className="text-sm text-gray-600 mb-3">
-                                                    {exercise.description}
-                                                </p>
-                                                <div className="flex items-center gap-2 text-xs mb-4">
-                                                    <span className={`px-3 py-1 rounded-full font-semibold ${exercise.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                                                        exercise.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-red-100 text-red-700'
-                                                        }`}>
-                                                        {exercise.difficulty === 'easy' ? 'Mudah' :
-                                                            exercise.difficulty === 'medium' ? 'Sedang' : 'Sulit'}
-                                                    </span>
-                                                    <span className="px-3 py-1 rounded-full bg-pink-100 text-pink-700 font-semibold">
-                                                        {exercise.targetReps ? `${exercise.targetReps} reps` : `${exercise.duration}s`}
-                                                    </span>
-                                                </div>
-
-                                                {/* Fullscreen Session Button */}
-                                                <button
-                                                    onClick={() => router.push(`/pages/exercise-session?exercise=${exercise.id}`)}
-                                                    className="w-full bg-gradient-to-r from-[#EE6983] to-[#B13455] text-white py-3 px-4 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg flex items-center justify-center gap-2 mb-2"
-                                                >
-                                                    <Play className="w-5 h-5" />
-                                                    Mulai Sesi Fullscreen
-                                                </button>
-
-                                                {/* Quick Start Button (existing functionality) */}
-                                                <button
-                                                    onClick={() => !isExercising && startExercise(exercise)}
-                                                    className="w-full bg-white text-[#EE6983] py-2 px-4 rounded-xl font-semibold border-2 border-[#EE6983] hover:bg-[#EE6983] hover:text-white transition-all"
-                                                >
-                                                    Latihan Di Sini
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Instructions (shown when selected) */}
-                                        {selectedExercise?.id === exercise.id && (
-                                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                                <p className="text-sm font-bold text-[#B13455] mb-2">Instruksi:</p>
-                                                <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                                                    {exercise.instructions.map((instruction, idx) => (
-                                                        <li key={idx}>{instruction}</li>
-                                                    ))}
-                                                </ol>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                        {/* Tips Section */}
+                        <div className="mt-8 bg-amber-50/50 rounded-xl p-5 border border-amber-100/50">
+                            <div className="flex items-start gap-3">
+                                <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <Lightbulb className="w-4 h-4 text-amber-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-semibold text-amber-900 mb-1.5">Tips Latihan Aman</h3>
+                                    <ul className="text-amber-700 text-xs space-y-1">
+                                        <li>Lakukan pemanasan ringan sebelum latihan</li>
+                                        <li>Berhenti jika merasa tidak nyaman</li>
+                                        <li>Tetap terhidrasi dengan minum air</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
