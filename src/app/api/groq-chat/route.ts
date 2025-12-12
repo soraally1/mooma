@@ -10,35 +10,35 @@ interface Message {
 
 interface PregnancyData {
   // Data Pribadi & Antropometri
-  name?: string;
-  age?: number;
-  height?: number;
-  prePregnancyWeight?: number;
-  bloodType?: string;
-  drugAllergies?: string;
-  foodAllergies?: string;
+  nama?: string;
+  umur?: number;
+  tinggi?: number;
+  beratBadanPraKehamilan?: number;
+  golonganDarah?: string;
+  alergiObat?: string;
+  alergiMakanan?: string;
 
   // Riwayat Kehamilan
-  lastMenstrualPeriod?: string;
-  estimatedDueDate?: string;
-  pregnancyWeek?: number;
+  hariPertamaHaidTerakhir?: string;
+  perkiraanTanggalPersalinan?: string;
+  usiaKehamilan?: number;
   gravidaParityAbortus?: string;
-  medicalHistory?: string;
-  previousPregnancyComplications?: string;
+  riwayatKesehatan?: string;
+  komplikasiKehamilanSebelumnya?: string;
 
   // Informasi Kesehatan Saat Ini
-  currentMedications?: string;
-  currentHealthConditions?: string;
+  obatYangSedangDikonsumsi?: string;
+  kondisiKesehatanSaatIni?: string;
   currentWeight?: number;
-  bloodPressure?: string;
-  exerciseFrequency?: string;
+  tekananDarah?: string;
+  frekuensiOlahraga?: string;
 
   // Monitoring Kesehatan Kehamilan
   mood?: string;
-  complaints?: string;
-  currentBodyWeight?: number;
-  babyMovement?: string;
-  additionalNotes?: string;
+  keluhan?: string;
+  beratBadanSaatIni?: number;
+  gerakanJanin?: string;
+  catatanTambahan?: string;
 
   // Informasi Kontak Darurat
   emergencyContactName?: string;
@@ -108,33 +108,33 @@ INSTRUKSI PENTING:
 DAFTAR LENGKAP INFORMASI YANG HARUS DIKUMPULKAN (dalam urutan):
 
 A. DATA PRIBADI & ANTROPOMETRI:
-1. name (Nama Lengkap Bunda)
-2. age (Usia Bunda)
-3. height (Tinggi badan dalam cm)
-4. prePregnancyWeight (Berat badan sebelum hamil dalam kg)
-5. bloodType (Golongan darah: A, B, AB, O)
-6. drugAllergies & foodAllergies (Alergi obat/makanan)
+1. nama (Nama Lengkap Bunda)
+2. umur (Usia Bunda)
+3. tinggi (Tinggi badan dalam cm)
+4. beratBadanPraKehamilan (Berat badan sebelum hamil dalam kg)
+5. golonganDarah (Golongan darah: A, B, AB, O)
+6. alergiObat & alergiMakanan (Alergi obat/makanan)
 
 B. RIWAYAT KEHAMILAN:
-7. lastMenstrualPeriod (HPHT - format DD-MM-YYYY)
-8. estimatedDueDate (HPL - akan dihitung otomatis 280 hari dari HPHT)
-9. pregnancyWeek (Usia kehamilan saat ini dalam minggu - akan dihitung otomatis)
+7. hariPertamaHaidTerakhir (HPHT - format DD-MM-YYYY)
+8. perkiraanTanggalPersalinan (HPL - akan dihitung otomatis 280 hari dari HPHT)
+9. usiaKehamilan (Usia kehamilan saat ini dalam minggu - akan dihitung otomatis)
 10. gravidaParityAbortus (Kehamilan ke berapa - G/P/A)
-11. medicalHistory (Riwayat penyakit)
-12. previousPregnancyComplications (Riwayat komplikasi kehamilan sebelumnya)
+11. riwayatKesehatan (Riwayat penyakit)
+12. komplikasiKehamilanSebelumnya (Riwayat komplikasi kehamilan sebelumnya)
 
 C. INFORMASI KESEHATAN SAAT INI:
-13. currentMedications (Obat-obatan yang sedang dikonsumsi)
-14. currentHealthConditions (Kondisi kesehatan saat ini)
-15. bloodPressure (Tekanan Darah - mmHg)
-16. exerciseFrequency (Frekuensi olahraga per minggu)
+13. obatYangSedangDikonsumsi (Obat-obatan yang sedang dikonsumsi)
+14. kondisiKesehatanSaatIni (Kondisi kesehatan saat ini)
+15. tekananDarah (Tekanan Darah - mmHg)
+16. frekuensiOlahraga (Frekuensi olahraga per minggu)
 
 D. MONITORING KESEHATAN KEHAMILAN:
 17. mood (Mood/Suasana hati saat ini)
-18. complaints (Keluhan yang dirasakan)
-19. currentBodyWeight (Berat badan saat ini dalam kg)
-20. babyMovement (Gerakan bayi)
-21. additionalNotes (Catatan bebas/Informasi tambahan)
+18. keluhan (Keluhan yang dirasakan)
+19. beratBadanSaatIni (Berat badan saat ini dalam kg)
+20. gerakanJanin (Gerakan bayi)
+21. catatanTambahan (Catatan bebas/Informasi tambahan)
 
 TOTAL: 21 INFORMASI YANG HARUS DIKUMPULKAN
 
@@ -160,28 +160,28 @@ FORMAT RESPONS (WAJIB JSON - SELALU GUNAKAN FORMAT INI):
 {
   "message": "pesan untuk pengguna",
   "extractedData": {
-    "name": nilai_atau_null,
-    "age": nilai_atau_null,
-    "height": nilai_atau_null,
-    "prePregnancyWeight": nilai_atau_null,
-    "bloodType": nilai_atau_null,
-    "drugAllergies": nilai_atau_null,
-    "foodAllergies": nilai_atau_null,
-    "lastMenstrualPeriod": nilai_atau_null,
-    "estimatedDueDate": nilai_atau_null,
-    "pregnancyWeek": nilai_atau_null,
-    "gravidaParityAbortus": nilai_atau_null,
-    "medicalHistory": nilai_atau_null,
-    "previousPregnancyComplications": nilai_atau_null,
-    "currentMedications": nilai_atau_null,
-    "currentHealthConditions": nilai_atau_null,
-    "bloodPressure": nilai_atau_null,
-    "exerciseFrequency": nilai_atau_null,
-    "mood": nilai_atau_null,
-    "complaints": nilai_atau_null,
-    "currentBodyWeight": nilai_atau_null,
-    "babyMovement": nilai_atau_null,
-    "additionalNotes": nilai_atau_null
+    "nama": "nilai_atau_null",
+    "usia": "nilai_atau_null",
+    "tinggiBadan": "nilai_atau_null",
+    "beratBadanPraKehamilan": "nilai_atau_null",
+    "golonganDarah": "nilai_atau_null",
+    "alergiObat": "nilai_atau_null",
+    "alergiMakanan": "nilai_atau_null",
+    "hariPertamaHaidTerakhir": "nilai_atau_null",
+    "perkiraanTanggalPersalinan": "nilai_atau_null",
+    "usiaKehamilan": "nilai_atau_null",
+    "gravidaParityAbortus": "nilai_atau_null",
+    "riwayatKesehatan": "nilai_atau_null",
+    "komplikasiKehamilanSebelumnya": "nilai_atau_null",
+    "obatYangSedangDikonsumsi": "nilai_atau_null",
+    "kondisiKesehatanSaatIni": "nilai_atau_null",
+    "tekananDarah": "nilai_atau_null",
+    "frekuensiOlahraga": "nilai_atau_null",
+    "mood": "nilai_atau_null",
+    "keluhan": "nilai_atau_null",
+    "beratBadanSaatIni": "nilai_atau_null",
+    "gerakanJanin": "nilai_atau_null",
+    "catatanTambahan": "nilai_atau_null"
   },
   "isComplete": false
 }
@@ -233,12 +233,12 @@ export async function POST(request: NextRequest) {
 
     // Build context about what data has been collected
     const REQUIRED_FIELDS = [
-      'name', 'age', 'height', 'prePregnancyWeight', 'bloodType',
-      'drugAllergies', 'foodAllergies',
-      'lastMenstrualPeriod', 'estimatedDueDate', 'pregnancyWeek',
-      'gravidaParityAbortus', 'medicalHistory', 'previousPregnancyComplications',
-      'currentMedications', 'currentHealthConditions', 'bloodPressure', 'exerciseFrequency',
-      'mood', 'complaints', 'currentBodyWeight', 'babyMovement', 'additionalNotes'
+      'nama', 'usia', 'tinggiBadan', 'beratBadanPraKehamilan', 'golonganDarah',
+      'alergiObat', 'alergiMakanan',
+      'hariPertamaHaidTerakhir', 'perkiraanTanggalPersalinan', 'usiaKehamilan',
+      'gravidaParityAbortus', 'riwayatKesehatan', 'komplikasiKehamilanSebelumnya',
+      'obatYangSedangDikonsumsi', 'kondisiKesehatanSaatIni', 'tekananDarah', 'frekuensiOlahraga',
+      'mood', 'keluhan', 'beratBadanSaatIni', 'gerakanJanin', 'catatanTambahan'
     ];
 
     const collectedFields = REQUIRED_FIELDS.filter(field => {

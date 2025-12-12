@@ -88,7 +88,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen bg-[#FDF8F0] relative overflow-hidden font-sans">
-      <Navbar />
+      {/*<Navbar />*/}
 
       <main className="flex flex-col items-center justify-center px-8 py-16 md:py-24">
         <div className="w-full max-w-md">
