@@ -14,24 +14,55 @@ interface Message {
 }
 
 interface PregnancyData {
-  name?: string;
-  age?: number;
-  lastMenstrualPeriod?: string;
-  dueDate?: string;
-  currentTrimester?: string;
-  weekOfPregnancy?: number;
-  numberOfChildren?: number;
-  medicalHistory?: string;
-  allergies?: string;
-  currentMedications?: string;
-  healthConditions?: string;
-  bloodPressure?: string;
-  exerciseFrequency?: string;
-  dietaryPreferences?: string;
-  emergencyContact?: string;
-  emergencyContactPhone?: string;
+  nama?: string;
+  usia?: number;
+  tinggiBadan?: number;
+  beratBadanPraKehamilan?: number;
+  golonganDarah?: string;
+  alergiObat?: string;
+  alergiMakanan?: string;
+  hariPertamaHaidTerakhir?: string;
+  perkiraanTanggalPersalinan?: string;
+  usiaKehamilan?: number;
+  gravidaParityAbortus?: string;
+  riwayatKesehatan?: string;
+  komplikasiKehamilanSebelumnya?: string;
+  obatYangSedangDikonsumsi?: string;
+  kondisiKesehatanSaatIni?: string;
+  tekananDarah?: string;
+  frekuensiOlahraga?: string;
+  mood?: string;
+  keluhan?: string;
+  beratBadanSaatIni?: number;
+  gerakanJanin?: string;
+  catatanTambahan?: string;
   [key: string]: string | number | undefined;
 }
+
+const FIELD_LABELS: Record<string, string> = {
+  nama: 'Nama Lengkap',
+  usia: 'Usia',
+  tinggiBadan: 'Tinggi Badan (cm)',
+  beratBadanPraKehamilan: 'Berat Badan Pra-Hamil (kg)',
+  golonganDarah: 'Golongan Darah',
+  alergiObat: 'Alergi Obat',
+  alergiMakanan: 'Alergi Makanan',
+  hariPertamaHaidTerakhir: 'HPHT',
+  perkiraanTanggalPersalinan: 'HPL (Perkiraan Lahir)',
+  usiaKehamilan: 'Usia Kehamilan (minggu)',
+  gravidaParityAbortus: 'Riwayat Hamil (G/P/A)',
+  riwayatKesehatan: 'Riwayat Kesehatan',
+  komplikasiKehamilanSebelumnya: 'Komplikasi Hamil Lalu',
+  obatYangSedangDikonsumsi: 'Obat Rutin',
+  kondisiKesehatanSaatIni: 'Kondisi Saat Ini',
+  tekananDarah: 'Tekanan Darah',
+  frekuensiOlahraga: 'Olahraga',
+  mood: 'Suasana Hati',
+  keluhan: 'Keluhan',
+  beratBadanSaatIni: 'Berat Badan Kini (kg)',
+  gerakanJanin: 'Gerakan Janin',
+  catatanTambahan: 'Catatan Tambahan'
+};
 
 export default function MoomaComplete() {
   const router = useRouter();
@@ -276,7 +307,7 @@ Untuk memulai, bolehkah saya tahu siapa nama Bunda dan berapa usianya saat ini?`
                     return (
                       <div key={key} className="border-b border-gray-200 pb-2 last:border-0 last:pb-0">
                         <p className="text-xs font-medium text-rose-500 uppercase tracking-wider mb-1">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                          {FIELD_LABELS[key] || key.replace(/([A-Z])/g, ' $1').trim()}
                         </p>
                         <p className="text-sm text-gray-700 font-medium">
                           {typeof value === 'object' ? JSON.stringify(value) : String(value)}

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { userMessage, conversationHistory, userName, pregnancyWeek } = await request.json();
+        const { userMessage, conversationHistory, userName, pregnancyWeek, mood } = await request.json();
 
         if (!userMessage) {
             return NextResponse.json(
@@ -94,6 +94,20 @@ export async function POST(request: NextRequest) {
                 contextPrompt += '\nTrimester: Kedua (13-27 minggu) - Fase pertumbuhan aktif janin';
             } else {
                 contextPrompt += '\nTrimester: Ketiga (28-40 minggu) - Fase persiapan kelahiran';
+            }
+        }
+
+        // Add mood context
+        if (mood) {
+            contextPrompt += `\n\nKONDISI EMOSIONAL SAAT INI: ${mood === 'happy' ? 'SENANG/BAHAGIA' : 'SEDIH/CEMAS'}`;
+            if (mood === 'happy') {
+                contextPrompt += '\n- Ikut rayakan kebahagiaannya dengan antusias!';
+                contextPrompt += '\n- Gunakan emoji ceria (🌟, 🎉, 💖)';
+                contextPrompt += '\n- Tanyakan apa yang membuatnya senang';
+            } else {
+                contextPrompt += '\n- Berikan ekstra empati dan validasi';
+                contextPrompt += '\n- Gunakan nada suara yang sangat lembut dan menenangkan';
+                contextPrompt += '\n- Fokus mendengarkan, jangan buru-buru memberi solusi';
             }
         }
 

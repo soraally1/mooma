@@ -11,8 +11,8 @@ interface Message {
 interface PregnancyData {
   // Data Pribadi & Antropometri
   nama?: string;
-  umur?: number;
-  tinggi?: number;
+  usia?: number;
+  tinggiBadan?: number;
   beratBadanPraKehamilan?: number;
   golonganDarah?: string;
   alergiObat?: string;
@@ -29,7 +29,6 @@ interface PregnancyData {
   // Informasi Kesehatan Saat Ini
   obatYangSedangDikonsumsi?: string;
   kondisiKesehatanSaatIni?: string;
-  currentWeight?: number;
   tekananDarah?: string;
   frekuensiOlahraga?: string;
 
@@ -109,8 +108,8 @@ DAFTAR LENGKAP INFORMASI YANG HARUS DIKUMPULKAN (dalam urutan):
 
 A. DATA PRIBADI & ANTROPOMETRI:
 1. nama (Nama Lengkap Bunda)
-2. umur (Usia Bunda)
-3. tinggi (Tinggi badan dalam cm)
+2. usia (Usia Bunda)
+3. tinggiBadan (Tinggi badan dalam cm)
 4. beratBadanPraKehamilan (Berat badan sebelum hamil dalam kg)
 5. golonganDarah (Golongan darah: A, B, AB, O)
 6. alergiObat & alergiMakanan (Alergi obat/makanan)
@@ -145,7 +144,7 @@ STRATEGI PERCAKAPAN:
 - Berikan pujian atau dukungan setelah pengguna menjawab (misal: "Wah, bagus sekali Bunda rajin olahraga!").
 
 PENYELESAIAN:
-- HANYA tandai isComplete: true setelah MINIMAL 15 informasi INTI telah dikumpulkan (name, age, height, prePregnancyWeight, bloodType, lastMenstrualPeriod, gravidaParityAbortus, currentWeight/currentBodyWeight, bloodPressure, drugAllergies, foodAllergies, medicalHistory, currentMedications, mood, complaints).
+- HANYA tandai isComplete: true setelah MINIMAL 15 informasi INTI telah dikumpulkan (nama, usia, tinggiBadan, beratBadanPraKehamilan, golonganDarah, hariPertamaHaidTerakhir, gravidaParityAbortus, beratBadanSaatIni, tekananDarah, alergiObat, alergiMakanan, riwayatKesehatan, obatYangSedangDikonsumsi, mood, keluhan).
 - Ucapkan "Data telah lengkap" HANYA setelah benar-benar menanyakan semua informasi penting.
 - Jika ragu apakah sudah lengkap, TERUS bertanya.
 
@@ -362,21 +361,21 @@ ${collectedFields.length >= 21 ? '✓ Semua data sudah lengkap! Boleh selesaikan
 
     // Fields that can be null but are "optional" (user can skip)
     const OPTIONAL_FIELDS = [
-      'additionalNotes',      // User might not have extra notes
-      'previousPregnancyComplications', // Only relevant for multiparous
-      'estimatedDueDate',     // Can be calculated from HPHT
-      'pregnancyWeek',        // Can be calculated from HPHT
+      'catatanTambahan',      // User might not have extra notes
+      'komplikasiKehamilanSebelumnya', // Only relevant for multiparous
+      'perkiraanTanggalPersalinan',     // Can be calculated from HPHT
+      'usiaKehamilan',        // Can be calculated from HPHT
     ];
 
     // Fields where "null" is a valid answer (e.g., "no allergies", "no medical history")
     const NULLABLE_FIELDS = [
-      'drugAllergies',
-      'foodAllergies',
-      'medicalHistory',
-      'previousPregnancyComplications',
-      'currentMedications',
-      'currentHealthConditions',
-      'additionalNotes',
+      'alergiObat',
+      'alergiMakanan',
+      'riwayatKesehatan',
+      'komplikasiKehamilanSebelumnya',
+      'obatYangSedangDikonsumsi',
+      'kondisiKesehatanSaatIni',
+      'catatanTambahan',
     ];
 
     // Count how many fields are actually filled (has value OR was explicitly set to null in extractedData)

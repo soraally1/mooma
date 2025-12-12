@@ -10,19 +10,19 @@ import HomepageNavbar from '@/app/components/homepage-navbar';
 import { recipeService, Recipe } from '@/services/recipeService';
 
 interface PregnancyData {
-  name?: string;
-  age?: number;
-  lastMenstrualPeriod?: string;
-  currentBodyWeight?: number;
-  bloodPressure?: string;
-  height?: number;
-  prePregnancyWeight?: number;
-  bloodType?: string;
-  currentHealthConditions?: string;
+  nama?: string;
+  usia?: number;
+  hariPertamaHaidTerakhir?: string;
+  beratBadanSaatIni?: number;
+  tekananDarah?: string;
+  tinggiBadan?: number;
+  beratBadanPraKehamilan?: number;
+  golonganDarah?: string;
+  kondisiKesehatanSaatIni?: string;
   mood?: string;
-  complaints?: string;
-  babyMovement?: string;
-  additionalNotes?: string;
+  keluhan?: string;
+  gerakanJanin?: string;
+  catatanTambahan?: string;
   [key: string]: any;
 }
 
@@ -74,9 +74,9 @@ export default function ProfilePage() {
           setPregnancyData(data);
 
           // Calculate pregnancy metrics
-          if (data.lastMenstrualPeriod) {
+          if (data.hariPertamaHaidTerakhir) {
             try {
-              const metrics = calculatePregnancyMetrics(data.lastMenstrualPeriod);
+              const metrics = calculatePregnancyMetrics(data.hariPertamaHaidTerakhir);
               setPregnancyMetrics(metrics);
             } catch (calcError) {
               console.error('Error calculating pregnancy metrics:', calcError);
@@ -265,13 +265,13 @@ export default function ProfilePage() {
             <div className="rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-sm text-[#EE6983] font-bold mb-3">Berat badan</p>
               <p className="text-5xl font-black text-[#EE6983]">
-                {pregnancyData.currentBodyWeight || '-'}
+                {pregnancyData.beratBadanSaatIni || '-'}
               </p>
               <p className="text-sm text-[#EE6983] font-bold mt-2">kg</p>
             </div>
             <div className="rounded-3xl p-6 text-center text-white shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 border-4 border-white" style={{ backgroundColor: '#EE6983' }}>
               <p className="text-sm font-bold mb-3">Tekanan darah</p>
-              <p className="text-4xl font-black">{pregnancyData.bloodPressure || '-'}</p>
+              <p className="text-4xl font-black">{pregnancyData.tekananDarah || '-'}</p>
               <p className="text-sm font-bold mt-2">mmhg</p>
             </div>
             <div className="rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
@@ -302,21 +302,21 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-xs text-[#EE6983] font-bold mb-3">Nama</p>
-              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.name || '-'}</p>
+              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.nama || '-'}</p>
             </div>
             <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-xs text-[#EE6983] font-bold mb-3">Umur</p>
-              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.age || '-'}</p>
+              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.usia || '-'}</p>
               <p className="text-xs text-[#EE6983] font-semibold mt-1">tahun</p>
             </div>
             <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-xs text-[#EE6983] font-bold mb-3">Tinggi</p>
-              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.height || '-'}</p>
+              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.tinggiBadan || '-'}</p>
               <p className="text-xs text-[#EE6983] font-semibold mt-1">cm</p>
             </div>
             <div className="rounded-3xl p-5 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-xs text-[#EE6983] font-bold mb-3">Golongan Darah</p>
-              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.bloodType || '-'}</p>
+              <p className="text-2xl font-black text-[#EE6983]">{pregnancyData.golonganDarah || '-'}</p>
             </div>
           </div>
         </div>

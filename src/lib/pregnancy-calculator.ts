@@ -18,10 +18,10 @@ export interface PregnancyCalculations {
  */
 function parseDateString(dateStr: string): Date {
   if (!dateStr) throw new Error('Date string is required');
-  
+
   const parts = dateStr.split('-');
   if (parts.length !== 3) throw new Error('Invalid date format. Use DD-MM-YYYY');
-  
+
   const [day, month, year] = parts.map(Number);
   return new Date(year, month - 1, day);
 }
@@ -39,6 +39,7 @@ function formatDateString(date: Date): string {
 /**
  * Calculate estimated due date (280 days from HPHT)
  * HPHT = Hari Pertama Haid Terakhir (Last Menstrual Period)
+ * Expected format: DD-MM-YYYY (from hariPertamaHaidTerakhir)
  */
 export function calculateEstimatedDueDate(hphtString: string): string {
   try {
@@ -59,15 +60,15 @@ export function calculatePregnancyWeekAndDay(hphtString: string): { week: number
   try {
     const hpht = parseDateString(hphtString);
     const today = new Date();
-    
+
     // Calculate days since HPHT
     const timeDiff = today.getTime() - hpht.getTime();
     const daysSinceHpht = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    
+
     // Calculate week and day
     const week = Math.floor(daysSinceHpht / 7);
     const day = daysSinceHpht % 7;
-    
+
     return { week, day };
   } catch (error) {
     console.error('Error calculating pregnancy week:', error);
@@ -96,10 +97,10 @@ export function calculateDaysRemaining(dueDateString: string): number {
   try {
     const dueDate = parseDateString(dueDateString);
     const today = new Date();
-    
+
     const timeDiff = dueDate.getTime() - today.getTime();
     const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-    
+
     return Math.max(0, daysRemaining);
   } catch (error) {
     console.error('Error calculating days remaining:', error);
@@ -121,19 +122,19 @@ export function calculatePregnancyMetrics(hphtString: string): PregnancyCalculat
   try {
     // Calculate estimated due date
     const estimatedDueDate = calculateEstimatedDueDate(hphtString);
-    
+
     // Calculate pregnancy week and day
     const { week, day } = calculatePregnancyWeekAndDay(hphtString);
-    
+
     // Calculate trimester
     const { trimester, label: trimesterLabel } = calculateTrimester(week);
-    
+
     // Calculate days remaining
     const daysRemaining = calculateDaysRemaining(estimatedDueDate);
-    
+
     // Get gestational age string
     const gestationalAge = getGestationalAgeString(week, day);
-    
+
     return {
       pregnancyWeek: week,
       pregnancyDay: day,
@@ -174,19 +175,19 @@ export function validateHphtDate(hphtString: string): { valid: boolean; message:
   try {
     const hpht = parseDateString(hphtString);
     const today = new Date();
-    
+
     if (hpht > today) {
       return { valid: false, message: 'HPHT tidak boleh di masa depan' };
     }
-    
+
     // Check if HPHT is not too old (more than 42 weeks ago)
     const maxHphtDate = new Date();
     maxHphtDate.setDate(maxHphtDate.getDate() - 294); // 42 weeks
-    
+
     if (hpht < maxHphtDate) {
       return { valid: false, message: 'HPHT terlalu lama, mungkin sudah melahirkan' };
     }
-    
+
     return { valid: true, message: 'HPHT valid' };
   } catch (error) {
     return { valid: false, message: 'Format tanggal tidak valid. Gunakan DD-MM-YYYY' };

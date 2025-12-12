@@ -6,6 +6,8 @@ import { Loader, Camera, Upload, CheckCircle2, AlertTriangle, XCircle, ChevronLe
 import HomepageNavbar from '@/app/components/homepage-navbar';
 import { nutritionService, NutritionAnalysis } from '@/services/nutritionService';
 import toast, { Toaster } from 'react-hot-toast';
+import { auth, db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function NutritionPage() {
     const router = useRouter();
@@ -33,6 +35,27 @@ export default function NutritionPage() {
         try {
             const result = await nutritionService.analyzeFood(base64Image);
             setAnalysis(result);
+
+            // Save to Firestore if user is logged in
+            if (auth.currentUser) {
+                try {
+                    await addDoc(collection(db, 'nutritionLogs'), {
+                        userId: auth.currentUser.uid,
+                        foodName: result.foodName,
+                        calories: result.calories,
+                        verdict: result.verdict,
+                        nutrition: result.nutrition,
+                        benefits: result.benefits,
+                        risks: result.risks,
+                        advice: result.advice,
+                        timestamp: serverTimestamp()
+                    });
+                    toast.success('Hasil analisis disimpan ke jurnal!');
+                } catch (error) {
+                    console.error('Error saving to Firestore:', error);
+                    // Don't show error to user as the analysis itself was successful
+                }
+            }
         } catch (error) {
             toast.error('Gagal menganalisis makanan. Coba lagi ya, Mooma!');
             setImagePreview(null);

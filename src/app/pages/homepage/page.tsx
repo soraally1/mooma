@@ -10,27 +10,27 @@ import { calculatePregnancyMetrics, PregnancyCalculations } from '@/lib/pregnanc
 import { getPregnancyDescription } from '@/lib/pregnancy-description';
 
 interface PregnancyData {
-  currentBodyWeight?: number;
-  bloodPressure?: string;
-  estimatedDueDate?: string;
-  lastMenstrualPeriod?: string;
-  name?: string;
+  beratBadanSaatIni?: number;
+  tekananDarah?: string;
+  perkiraanTanggalPersalinan?: string;
+  hariPertamaHaidTerakhir?: string;
+  nama?: string;
   gravidaParityAbortus?: string;
-  pregnancyWeek?: number;
-  height?: number;
-  prePregnancyWeight?: number;
-  bloodType?: string;
-  drugAllergies?: string;
-  foodAllergies?: string;
-  medicalHistory?: string;
-  previousPregnancyComplications?: string;
-  currentMedications?: string;
-  currentHealthConditions?: string;
-  exerciseFrequency?: string | number;
+  usiaKehamilan?: number;
+  tinggiBadan?: number;
+  beratBadanPraKehamilan?: number;
+  golonganDarah?: string;
+  alergiObat?: string;
+  alergiMakanan?: string;
+  riwayatKesehatan?: string;
+  komplikasiKehamilanSebelumnya?: string;
+  obatYangSedangDikonsumsi?: string;
+  kondisiKesehatanSaatIni?: string;
+  frekuensiOlahraga?: string | number;
   mood?: string;
-  complaints?: string;
-  babyMovement?: string;
-  additionalNotes?: string;
+  keluhan?: string;
+  gerakanJanin?: string;
+  catatanTambahan?: string;
 }
 
 export default function Homepage() {
@@ -75,12 +75,12 @@ export default function Homepage() {
           }
 
           setPregnancyData(data);
-          setUserName(data.name || user.displayName || 'Mooma');
+          setUserName(data.nama || user.displayName || 'Mooma');
 
           // Calculate pregnancy metrics using the service
-          if (data.lastMenstrualPeriod) {
+          if (data.hariPertamaHaidTerakhir) {
             try {
-              const metrics = calculatePregnancyMetrics(data.lastMenstrualPeriod);
+              const metrics = calculatePregnancyMetrics(data.hariPertamaHaidTerakhir);
               setPregnancyMetrics(metrics);
               console.log('Pregnancy metrics calculated:', metrics);
             } catch (calcError) {
@@ -199,7 +199,7 @@ export default function Homepage() {
               <div className="bg-[#FFF5E4] rounded-xl md:rounded-2xl lg:rounded-3xl p-3 md:p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 animate-fade-in-delay-3">
                 <p className="text-[#B13455] text-xs lg:text-sm font-semibold mb-2 lg:mb-3">Berat mooma</p>
                 <p className="text-[#B13455] text-2xl md:text-3xl lg:text-4xl font-black">
-                  {loading ? <Loader className="w-6 h-6 animate-spin" /> : pregnancyData.currentBodyWeight || '-'}
+                  {loading ? <Loader className="w-6 h-6 animate-spin" /> : pregnancyData.beratBadanSaatIni || '-'}
                   <span className="text-sm lg:text-lg ml-1 font-semibold">kg</span>
                 </p>
               </div>
@@ -211,7 +211,7 @@ export default function Homepage() {
                   <p className="text-[#B13455] text-xl md:text-2xl lg:text-3xl font-black">
                     {loading ? <Loader className="w-6 h-6 animate-spin" /> : pregnancyData.gravidaParityAbortus || '-'}
                   </p>
-                  {pregnancyData.pregnancyWeek}
+                  {pregnancyData.usiaKehamilan}
                 </div>
               </div>
 

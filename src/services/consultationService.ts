@@ -124,7 +124,8 @@ class ConsultationChatService {
         userMessage: string,
         conversationHistory: { role: string; content: string }[],
         userName?: string,
-        pregnancyWeek?: number | null
+        pregnancyWeek?: number | null,
+        mood?: 'happy' | 'sad' | null
     ): Promise<string> {
         try {
             const response = await fetch('/api/consultation-chat', {
@@ -135,6 +136,7 @@ class ConsultationChatService {
                     conversationHistory,
                     userName,
                     pregnancyWeek,
+                    mood,
                 }),
             });
 
