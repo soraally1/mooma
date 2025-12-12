@@ -251,8 +251,8 @@ export default function ResepPage() {
             </div>
 
             <div className="flex justify-center lg:justify-end order-1 lg:order-2 animate-fade-in-delay-2">
-              <div className="relative w-72 h-72 lg:w-96 lg:h-96 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm animate-bounce-slow">
-                <ChefHat className="w-40 h-40 lg:w-52 lg:h-52 text-white opacity-90" />
+              <div className="relative w-80 h-80 lg:w-[28rem] lg:h-[28rem] bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm animate-bounce-slow">
+                <img src="/expression/cook.webp" alt="Mooma Cooking" className="w-72 h-72 lg:w-156 lg:h-156 object-contain" />
                 <div className="absolute -top-4 -right-4 bg-white p-4 rounded-2xl shadow-xl transform rotate-12">
                   <UtensilsCrossed className="w-8 h-8 text-[#EE6983]" />
                 </div>

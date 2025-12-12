@@ -177,142 +177,124 @@ function validateDiaphragmaticBreathing(landmarks: NormalizedLandmark[]): Exerci
 }
 
 /**
- * Seated Cat-Cow (Spinal Mobilization)
- * - Track spine flexion/extension
- * - Avoid excessive neck movement
+ * Arm Raises (Angkat Tangan ke Atas)
+ * - Arms go from sides to overhead
+ * - Easy to detect with front camera
  */
 function validateCatCow(landmarks: NormalizedLandmark[]): ExerciseValidation {
     const feedback: string[] = [];
     const keyAngles: ExerciseValidation['keyAngles'] = [];
 
-    // Calculate trunk angle (shoulder-hip-knee if visible)
-    const leftTrunkAngle = calculateAngle(
-        landmarks[PoseLandmark.LEFT_SHOULDER],
-        landmarks[PoseLandmark.LEFT_HIP],
-        landmarks[PoseLandmark.LEFT_KNEE]
-    );
-    const rightTrunkAngle = calculateAngle(
-        landmarks[PoseLandmark.RIGHT_SHOULDER],
-        landmarks[PoseLandmark.RIGHT_HIP],
-        landmarks[PoseLandmark.RIGHT_KNEE]
-    );
-    const avgTrunkAngle = (leftTrunkAngle + rightTrunkAngle) / 2;
+    const leftShoulder = landmarks[PoseLandmark.LEFT_SHOULDER];
+    const rightShoulder = landmarks[PoseLandmark.RIGHT_SHOULDER];
+    const leftWrist = landmarks[PoseLandmark.LEFT_WRIST];
+    const rightWrist = landmarks[PoseLandmark.RIGHT_WRIST];
 
-    // Target range: 70-110 degrees for cat-cow movement
-    const trunkStatus = isAngleInRange(avgTrunkAngle, 90, 20) ? 'correct' :
-        isAngleInRange(avgTrunkAngle, 90, 35) ? 'close' : 'incorrect';
+    // Check arm height: wrist Y relative to shoulder Y
+    // Negative = wrist above shoulder (arms raised)
+    const leftArmHeight = (leftWrist.y - leftShoulder.y) * 100;
+    const rightArmHeight = (rightWrist.y - rightShoulder.y) * 100;
+    const avgArmHeight = (leftArmHeight + rightArmHeight) / 2;
 
-    keyAngles.push({
-        name: 'Sudut Punggung',
-        current: Math.round(avgTrunkAngle),
-        target: 90,
-        status: trunkStatus
-    });
-
-    // Check neck position (nose relative to shoulders)
-    const nose = landmarks[PoseLandmark.NOSE];
-    const midShoulder = getMidpoint(
-        landmarks[PoseLandmark.LEFT_SHOULDER],
-        landmarks[PoseLandmark.RIGHT_SHOULDER]
-    );
-    const neckExtension = (midShoulder.y - nose.y);
-
-    if (neckExtension > 0.25) {
-        feedback.push('⚠️ Jangan terlalu mendongak, jaga leher netral');
-    }
-
-    // Spine deviation check
-    const spineAngle = getSpineAngle(landmarks);
-
-    if (avgTrunkAngle < 70) {
-        feedback.push('🐈 Posisi Cat - lengkungkan punggung ke atas');
-    } else if (avgTrunkAngle > 110) {
-        feedback.push('🐄 Posisi Cow - busungkan dada ke depan');
+    // Determine position
+    let armStatus: 'correct' | 'close' | 'incorrect' = 'incorrect';
+    if (avgArmHeight < -20) {
+        armStatus = 'correct'; // Arms up high
+        feedback.push('✅ Tangan terangkat tinggi! Bagus!');
+    } else if (avgArmHeight > 15) {
+        armStatus = 'close'; // Arms at sides
+        feedback.push('⬆️ Angkat tangan ke atas');
     } else {
-        feedback.push('✅ Gerakan bagus! Lanjutkan perlahan');
+        armStatus = 'close'; // Transitioning
+        feedback.push('↑ Terus angkat tangan lebih tinggi');
     }
 
     keyAngles.push({
-        name: 'Stabilitas',
-        current: Math.round(spineAngle),
-        target: 5,
-        status: spineAngle < 15 ? 'correct' : 'close'
+        name: 'Tinggi Tangan',
+        current: Math.round(-avgArmHeight), // Invert for display
+        target: 30,
+        status: armStatus
     });
+
+    // Check arm symmetry
+    const armDiff = Math.abs(leftArmHeight - rightArmHeight);
+    const isSymmetric = armDiff < 15;
+    keyAngles.push({
+        name: 'Keseimbangan',
+        current: Math.round(armDiff),
+        target: 0,
+        status: isSymmetric ? 'correct' : 'close'
+    });
+
+    if (!isSymmetric) {
+        feedback.push('↔️ Angkat kedua tangan secara seimbang');
+    }
 
     return {
-        isCorrect: trunkStatus === 'correct' || trunkStatus === 'close',
+        isCorrect: armStatus === 'correct' || armStatus === 'close',
         feedback,
         keyAngles
     };
 }
 
 /**
- * Seated Scapular Retraction
- * - Shoulders pulled back
- * - Chest open
- * - No upper trap tension
+ * Chest Fly (Buka-Tutup Tangan)
+ * - Arms open to sides then close in front (like hugging)
+ * - Detection via elbow angle
  */
 function validateScapularRetraction(landmarks: NormalizedLandmark[]): ExerciseValidation {
     const feedback: string[] = [];
     const keyAngles: ExerciseValidation['keyAngles'] = [];
-    let correctCount = 0;
 
-    // 1. Check shoulder position relative to ears (width)
-    const shoulderWidth = Math.abs(
-        landmarks[PoseLandmark.LEFT_SHOULDER].x -
-        landmarks[PoseLandmark.RIGHT_SHOULDER].x
+    // Calculate elbow angles
+    const leftElbowAngle = calculateAngle(
+        landmarks[PoseLandmark.LEFT_SHOULDER],
+        landmarks[PoseLandmark.LEFT_ELBOW],
+        landmarks[PoseLandmark.LEFT_WRIST]
     );
+    const rightElbowAngle = calculateAngle(
+        landmarks[PoseLandmark.RIGHT_SHOULDER],
+        landmarks[PoseLandmark.RIGHT_ELBOW],
+        landmarks[PoseLandmark.RIGHT_WRIST]
+    );
+    const avgElbowAngle = (leftElbowAngle + rightElbowAngle) / 2;
 
-    // Wider shoulders = more retraction (in frontal view)
-    const isRetracted = shoulderWidth > 0.35; // Threshold for good retraction
-    keyAngles.push({
-        name: 'Retraksi Bahu',
-        current: Math.round(shoulderWidth * 100),
-        target: 40,
-        status: isRetracted ? 'correct' : 'incorrect'
-    });
-
-    if (isRetracted) {
-        correctCount++;
-        feedback.push('✅ Bahu terbuka dengan baik');
+    // Determine position
+    let status: 'correct' | 'close' | 'incorrect' = 'incorrect';
+    if (avgElbowAngle < 90) {
+        status = 'correct'; // Arms closed (hugging position)
+        feedback.push('✅ Tangan tertutup sempurna!');
+    } else if (avgElbowAngle > 130) {
+        status = 'close'; // Arms open
+        feedback.push('🤗 Tutup tangan ke depan dada');
     } else {
-        feedback.push('← → Tarik bahu ke belakang, buka dada');
+        status = 'close'; // Transitioning
+        feedback.push('→ Tutup lebih rapat');
     }
 
-    // 2. Shoulders level
-    const shoulderTilt = getShoulderTiltAngle(landmarks);
-    const isShouldersLevel = Math.abs(shoulderTilt) < 8 || Math.abs(shoulderTilt - 180) < 8;
+    keyAngles.push({
+        name: 'Posisi Tangan',
+        current: Math.round(avgElbowAngle),
+        target: 70,
+        status: status
+    });
+
+    // Check symmetry
+    const diff = Math.abs(leftElbowAngle - rightElbowAngle);
+    const isSymmetric = diff < 20;
     keyAngles.push({
         name: 'Keseimbangan',
-        current: Math.round(Math.min(shoulderTilt, 180 - shoulderTilt)),
+        current: Math.round(diff),
         target: 0,
-        status: isShouldersLevel ? 'correct' : 'close'
+        status: isSymmetric ? 'correct' : 'close'
     });
 
-    if (isShouldersLevel) {
-        correctCount++;
-    } else {
-        feedback.push('↔️ Jaga bahu tetap sejajar');
-    }
-
-    // 3. Shoulders not elevated
-    const shoulderElevation = getShoulderElevation(landmarks);
-    const notTensed = shoulderElevation > 0.12;
-    keyAngles.push({
-        name: 'Relaksasi',
-        current: Math.round(shoulderElevation * 100),
-        target: 15,
-        status: notTensed ? 'correct' : 'incorrect'
-    });
-
-    if (notTensed) {
-        correctCount++;
-    } else {
-        feedback.push('⬇️ Turunkan bahu dari telinga');
+    if (!isSymmetric) {
+        feedback.push('↔️ Gerakkan kedua tangan secara seimbang');
     }
 
     return {
-        isCorrect: correctCount >= 2,
+        isCorrect: status === 'correct' || status === 'close',
         feedback,
         keyAngles
     };
@@ -817,38 +799,38 @@ export const exerciseLibrary: Exercise[] = [
     },
     {
         id: 'seated-cat-cow',
-        name: 'Cat-Cow Duduk',
-        description: 'Mobilisasi tulang belakang dengan gerakan lambat',
+        name: 'Angkat Tangan ke Atas',
+        description: 'Peregangan lengan untuk melancarkan sirkulasi',
         instructions: [
-            'Duduk tegak, tangan di paha',
-            'Tarik napas: busungkan dada (Cow)',
-            'Buang napas: lengkungkan punggung (Cat)',
-            'Gerakan perlahan 8-15°, ikuti napas',
-            'Hindari mendongak berlebihan'
+            'Duduk tegak dengan tangan di samping',
+            'Angkat kedua tangan perlahan ke atas',
+            'Tangan melewati kepala, jari menunjuk ke langit',
+            'Turunkan perlahan kembali ke samping',
+            'Ulangi gerakan dengan napas teratur'
         ],
         targetReps: 10,
         difficulty: 'easy',
         trimesterSafe: [1, 2],
         validate: validateCatCow,
-        icon: '🐈',
+        icon: '🙌',
         category: 'flexibility'
     },
     {
         id: 'scapular-retraction',
-        name: 'Tarik Bahu (Retraction)',
-        description: 'Memperbaiki postur dan mencegah bungkuk',
+        name: 'Chest Fly (Buka-Tutup Tangan)',
+        description: 'Melatih otot dada dengan gerakan membuka dan menutup tangan',
         instructions: [
-            'Duduk tegak dengan bahu rileks',
-            'Tarik kedua bahu ke belakang',
-            'Bayangkan menjepit pensil di punggung',
-            'Tahan 3 detik, lalu lepas perlahan',
-            'Jaga bahu tetap turun, tidak tegang'
+            'Duduk tegak, rentangkan tangan ke samping',
+            'Siku sedikit ditekuk',
+            'Tutup tangan ke depan dada (seperti memeluk)',
+            'Buka kembali ke samping',
+            'Ulangi gerakan dengan teratur'
         ],
         targetReps: 12,
         difficulty: 'easy',
         trimesterSafe: [1, 2, 3],
         validate: validateScapularRetraction,
-        icon: '🔙',
+        icon: '🤗',
         category: 'strength'
     },
 
@@ -891,20 +873,20 @@ export const exerciseLibrary: Exercise[] = [
     },
     {
         id: 'side-bend',
-        name: 'Side Bend Modifikasi',
-        description: 'Stabilitas sisi tubuh dengan gerakan terkontrol',
+        name: 'Angkat Tangan Bergantian',
+        description: 'Peregangan samping dengan mengangkat tangan bergantian',
         instructions: [
-            'Duduk tegak, satu tangan di pinggang',
-            'Angkat tangan lain ke atas kepala',
-            'Miringkan tubuh ke samping (max 15°)',
-            'Jaga panggul tetap stabil',
-            'Kembali ke tengah, ganti sisi'
+            'Duduk tegak, kedua tangan di samping',
+            'Angkat tangan kiri tinggi ke atas',
+            'Turunkan, lalu angkat tangan kanan',
+            'Rasakan peregangan di sisi tubuh',
+            'Ulangi bergantian dengan teratur'
         ],
         targetReps: 10,
         difficulty: 'medium',
         trimesterSafe: [2],
         validate: validateSideBend,
-        icon: '🎋',
+        icon: '🙋‍♀️',
         category: 'flexibility'
     },
 

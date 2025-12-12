@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PoseLandmarker, FilesetResolver, DrawingUtils, NormalizedLandmark } from '@mediapipe/tasks-vision';
-import { Play, Pause, RotateCcw, Trophy, X, Home, Sparkles, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { PoseLandmarker, FilesetResolver, NormalizedLandmark } from '@mediapipe/tasks-vision';
+import { Play, Pause, RotateCcw, Trophy, X, Home, Sparkles, CheckCircle2, Timer, Wind } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getExerciseById, Exercise, ExerciseValidation } from '@/app/lib/exercise-library';
+import { RepDetector, BreathingGuide, extractPoseMetrics, getRepConfig, MetricsSmoother } from '@/app/lib/rep-detection';
 import toast from 'react-hot-toast';
 
 type ScreenState = 'tutorial' | 'countdown' | 'exercise' | 'paused' | 'results';
@@ -18,6 +19,7 @@ export default function ExerciseSessionPage() {
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const [poseLandmarker, setPoseLandmarker] = useState<PoseLandmarker | null>(null);
     const [isModelLoading, setIsModelLoading] = useState(true);
     const [isCameraReady, setIsCameraReady] = useState(false);
@@ -32,11 +34,22 @@ export default function ExerciseSessionPage() {
     const [isExercising, setIsExercising] = useState(false);
     const [showTutorial, setShowTutorial] = useState(true);
 
-    // Rep detection state - improved for accuracy
-    const [isInPosition, setIsInPosition] = useState(false);
-    const [lastRepTime, setLastRepTime] = useState(0);
-    const [validationStreak, setValidationStreak] = useState(0);
-    const [hasCountedThisRep, setHasCountedThisRep] = useState(false);
+    // New Rep Detection System
+    const repDetectorRef = useRef<RepDetector | null>(null);
+    const breathingGuideRef = useRef<BreathingGuide | null>(null);
+    const metricsSmootherRef = useRef<MetricsSmoother>(new MetricsSmoother(5, 0.4));
+    const [currentPhase, setCurrentPhase] = useState<string>('Bersiap...');
+    const [phaseProgress, setPhaseProgress] = useState(0);
+    const [detectionConfidence, setDetectionConfidence] = useState(0);
+    const [phaseFeedback, setPhaseFeedback] = useState<string>('');
+
+    // Breathing state
+    const [breathingPhase, setBreathingPhase] = useState<'breatheIn' | 'hold' | 'breatheOut'>('breatheIn');
+    const [breathingCountdown, setBreathingCountdown] = useState(4);
+
+    // Timer state
+    const [exerciseTimer, setExerciseTimer] = useState(0);
+    const [totalExerciseDuration, setTotalExerciseDuration] = useState(60);
 
     // User data
     const [userName, setUserName] = useState('Mooma');
@@ -45,6 +58,21 @@ export default function ExerciseSessionPage() {
     // Session stats
     const [sessionDuration, setSessionDuration] = useState(0);
     const [accuracy, setAccuracy] = useState(0);
+    const [correctFrames, setCorrectFrames] = useState(0);
+    const [totalFrames, setTotalFrames] = useState(0);
+
+    // Stop camera function
+    const stopCamera = useCallback(() => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => {
+                track.stop();
+            });
+            streamRef.current = null;
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+    }, []);
 
     // Load exercise and check tutorial status
     useEffect(() => {
@@ -70,6 +98,24 @@ export default function ExerciseSessionPage() {
                     const ex = getExerciseById(exerciseId);
                     if (ex) {
                         setExercise(ex);
+
+                        // Set exercise duration
+                        const duration = ex.duration || (ex.targetReps ? ex.targetReps * 5 : 60);
+                        setTotalExerciseDuration(duration);
+                        setExerciseTimer(duration);
+
+                        // Initialize rep detector
+                        const repConfig = getRepConfig(exerciseId);
+                        repDetectorRef.current = new RepDetector(repConfig);
+
+                        // Initialize breathing guide for breathing exercises
+                        if (repConfig.type === 'breathing') {
+                            breathingGuideRef.current = new BreathingGuide(
+                                repConfig.breatheInDuration || 4,
+                                repConfig.holdDuration || 2,
+                                repConfig.breatheOutDuration || 4
+                            );
+                        }
 
                         // Check if tutorial has been viewed
                         const tutorialRef = doc(db, 'pregnancyData', user.uid, 'exerciseTutorials', exerciseId);
@@ -136,6 +182,8 @@ export default function ExerciseSessionPage() {
                     },
                 });
 
+                streamRef.current = stream;
+
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                     videoRef.current.onloadedmetadata = () => {
@@ -154,12 +202,47 @@ export default function ExerciseSessionPage() {
         }
 
         return () => {
-            if (videoRef.current?.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
-            }
+            stopCamera();
         };
-    }, [isModelLoading, poseLandmarker]);
+    }, [isModelLoading, poseLandmarker, stopCamera]);
+
+    // Exercise timer
+    useEffect(() => {
+        if (!isExercising || screenState !== 'exercise') return;
+
+        const timerInterval = setInterval(() => {
+            setExerciseTimer(prev => {
+                if (prev <= 1) {
+                    // Time's up - finish exercise
+                    handleFinish();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timerInterval);
+    }, [isExercising, screenState]);
+
+    // Breathing guide update
+    useEffect(() => {
+        if (!isExercising || screenState !== 'exercise' || !breathingGuideRef.current) return;
+
+        const breathingInterval = setInterval(() => {
+            const state = breathingGuideRef.current?.getState();
+            if (state) {
+                setBreathingPhase(state.phase);
+                setBreathingCountdown(state.countdown);
+
+                if (state.repCompleted) {
+                    setRepCount(state.totalReps);
+                    toast.success('🌬️ Siklus napas selesai!', { duration: 1000 });
+                }
+            }
+        }, 100);
+
+        return () => clearInterval(breathingInterval);
+    }, [isExercising, screenState]);
 
     // Pose detection loop
     useEffect(() => {
@@ -196,7 +279,31 @@ export default function ExerciseSessionPage() {
                     if (exercise && isExercising && screenState === 'exercise') {
                         const validation = exercise.validate(landmarks);
                         setCurrentValidation(validation);
-                        detectRep(validation.isCorrect);
+
+                        // Update accuracy tracking
+                        setTotalFrames(prev => prev + 1);
+                        if (validation.isCorrect) {
+                            setCorrectFrames(prev => prev + 1);
+                        }
+
+                        // Use new rep detection system (for non-breathing exercises)
+                        if (repDetectorRef.current && !breathingGuideRef.current) {
+                            const rawMetrics = extractPoseMetrics(landmarks);
+                            const result = repDetectorRef.current.update(rawMetrics);
+
+                            setCurrentPhase(result.phaseName);
+                            setPhaseProgress(result.phaseProgress);
+                            setDetectionConfidence(result.confidence);
+                            setPhaseFeedback(result.feedback);
+
+                            if (result.repCompleted) {
+                                setRepCount(prev => {
+                                    const newCount = prev + 1;
+                                    toast.success(`💪 Rep ke-${newCount}! Gerakan sempurna!`, { duration: 1500 });
+                                    return newCount;
+                                });
+                            }
+                        }
                     }
 
                     // Draw pose
@@ -214,46 +321,7 @@ export default function ExerciseSessionPage() {
                 cancelAnimationFrame(animationFrameId);
             }
         };
-    }, [poseLandmarker, isCameraReady, exercise, isExercising, screenState]);
-
-    // Improved rep detection with streak validation
-    const detectRep = (isCorrectPosition: boolean) => {
-        const now = Date.now();
-
-        // Update validation streak
-        if (isCorrectPosition) {
-            setValidationStreak(prev => Math.min(prev + 1, 5));
-        } else {
-            setValidationStreak(0);
-        }
-
-        // Require at least 3 consecutive correct validations to count as "in position"
-        const isStableCorrect = validationStreak >= 3;
-
-        // State machine for rep counting
-        if (isStableCorrect && !isInPosition) {
-            // Entering correct position (bottom of squat)
-            setIsInPosition(true);
-            setHasCountedThisRep(false);
-        } else if (!isCorrectPosition && isInPosition) {
-            // Exiting correct position (standing up)
-            setIsInPosition(false);
-
-            // Count the rep when leaving the correct position
-            if (!hasCountedThisRep && now - lastRepTime > 1200) {
-                setRepCount(prev => prev + 1);
-                setLastRepTime(now);
-                setHasCountedThisRep(true);
-
-                // Celebration effect
-                const confetti = ['🎉', '✨', '💪', '🌟', '⭐'];
-                toast.success(`${confetti[Math.floor(Math.random() * confetti.length)]} Rep ke-${repCount + 1}!`, {
-                    duration: 1000,
-                    icon: '🔥'
-                });
-            }
-        }
-    };
+    }, [poseLandmarker, isCameraReady, exercise, isExercising, screenState, repCount]);
 
     // Draw pose
     const drawPose = (
@@ -338,14 +406,19 @@ export default function ExerciseSessionPage() {
         setIsExercising(true);
         setSessionStartTime(Date.now());
         setRepCount(0);
-        setIsInPosition(false);
-        setValidationStreak(0);
-        setHasCountedThisRep(false);
+        setCorrectFrames(0);
+        setTotalFrames(0);
+
+        // Reset rep detector
+        repDetectorRef.current?.reset();
+
+        // Start breathing guide if applicable
+        breathingGuideRef.current?.start();
 
         // Enter fullscreen
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen().catch(() => {
-                toast.error('Fullscreen tidak didukung');
+                // Fullscreen not supported, continue anyway
             });
         }
     };
@@ -388,28 +461,35 @@ export default function ExerciseSessionPage() {
     const handlePause = () => {
         setIsExercising(false);
         setScreenState('paused');
+        breathingGuideRef.current?.stop();
     };
 
     // Resume exercise
     const handleResume = () => {
         setIsExercising(true);
         setScreenState('exercise');
+        breathingGuideRef.current?.start();
     };
 
     // Restart exercise
     const handleRestart = () => {
         setRepCount(0);
         setSessionStartTime(Date.now());
-        setIsInPosition(false);
         setCurrentValidation(null);
-        setValidationStreak(0);
-        setHasCountedThisRep(false);
+        setCorrectFrames(0);
+        setTotalFrames(0);
+        setExerciseTimer(totalExerciseDuration);
+
+        repDetectorRef.current?.reset();
+        breathingGuideRef.current?.start();
+
         setIsExercising(true);
         setScreenState('exercise');
     };
 
-    // Back to menu
+    // Back to menu with camera cleanup
     const handleBackToMenu = () => {
+        stopCamera();
         if (document.fullscreenElement) {
             document.exitFullscreen();
         }
@@ -421,12 +501,15 @@ export default function ExerciseSessionPage() {
         if (!exercise || !sessionStartTime) return;
 
         const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
-        const calculatedAccuracy = currentValidation?.isCorrect ? 95 : 75;
+        const calculatedAccuracy = totalFrames > 0 ? Math.round((correctFrames / totalFrames) * 100) : 75;
 
         setSessionDuration(duration);
         setAccuracy(calculatedAccuracy);
         setIsExercising(false);
         setScreenState('results');
+
+        // Stop breathing guide
+        breathingGuideRef.current?.stop();
 
         // Save to Firebase
         if (userId) {
@@ -449,12 +532,34 @@ export default function ExerciseSessionPage() {
     const handleExerciseAgain = () => {
         setRepCount(0);
         setSessionStartTime(Date.now());
-        setIsInPosition(false);
         setCurrentValidation(null);
-        setValidationStreak(0);
-        setHasCountedThisRep(false);
+        setCorrectFrames(0);
+        setTotalFrames(0);
+        setExerciseTimer(totalExerciseDuration);
+
+        repDetectorRef.current?.reset();
+
         setCountdown(3);
         setScreenState('countdown');
+    };
+
+    // Format time display
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Get breathing phase display
+    const getBreathingDisplay = () => {
+        switch (breathingPhase) {
+            case 'breatheIn':
+                return { text: 'Tarik Napas...', icon: '🌬️', color: 'from-blue-500 to-cyan-500' };
+            case 'hold':
+                return { text: 'Tahan...', icon: '⏸️', color: 'from-purple-500 to-pink-500' };
+            case 'breatheOut':
+                return { text: 'Buang Napas...', icon: '💨', color: 'from-green-500 to-teal-500' };
+        }
     };
 
     if (isModelLoading || !exercise) {
@@ -467,6 +572,9 @@ export default function ExerciseSessionPage() {
             </div>
         );
     }
+
+    const repConfig = getRepConfig(exerciseId || '');
+    const isBreathingExercise = repConfig.type === 'breathing';
 
     return (
         <div className="relative h-screen w-screen overflow-hidden bg-gray-900">
@@ -505,6 +613,12 @@ export default function ExerciseSessionPage() {
                                     </li>
                                 ))}
                             </ol>
+                        </div>
+
+                        {/* Duration info */}
+                        <div className="bg-white/15 backdrop-blur-md rounded-xl px-6 py-3 mb-8 inline-flex items-center gap-3">
+                            <Timer className="w-6 h-6" />
+                            <span className="text-xl font-semibold">Durasi: {formatTime(totalExerciseDuration)}</span>
                         </div>
 
                         <div className="flex gap-4 justify-center flex-wrap">
@@ -550,12 +664,22 @@ export default function ExerciseSessionPage() {
                         <Pause className="w-7 h-7 text-pink-600" />
                     </button>
 
+                    {/* Timer Display */}
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30 bg-white/95 backdrop-blur-md rounded-2xl px-8 py-4 shadow-2xl">
+                        <div className="flex items-center gap-3">
+                            <Timer className="w-8 h-8 text-pink-600" />
+                            <span className="text-4xl font-black text-gray-800">{formatTime(exerciseTimer)}</span>
+                        </div>
+                    </div>
+
                     {/* Rep Counter */}
                     <div className="absolute top-8 left-8 z-30 bg-white/95 backdrop-blur-md rounded-3xl px-10 py-7 shadow-2xl">
                         <div className="flex items-center gap-5">
                             <Trophy className="w-12 h-12 text-yellow-500" />
                             <div>
-                                <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Repetisi</p>
+                                <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">
+                                    {isBreathingExercise ? 'Siklus' : 'Repetisi'}
+                                </p>
                                 <p className="text-6xl font-black text-pink-600 leading-none">{repCount}</p>
                                 {exercise.targetReps && (
                                     <p className="text-base text-gray-500 font-semibold">dari {exercise.targetReps}</p>
@@ -576,12 +700,64 @@ export default function ExerciseSessionPage() {
                         </div>
                     )}
 
-                    {/*Feedback */}
+                    {/* Breathing Guide Overlay */}
+                    {isBreathingExercise && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-25 pointer-events-none">
+                            <div className={`bg-gradient-to-r ${getBreathingDisplay().color} rounded-full w-64 h-64 flex flex-col items-center justify-center shadow-2xl animate-pulse`}>
+                                <span className="text-6xl mb-2">{getBreathingDisplay().icon}</span>
+                                <span className="text-white text-2xl font-bold">{getBreathingDisplay().text}</span>
+                                <span className="text-white text-8xl font-black">{breathingCountdown}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Phase Display (for non-breathing exercises) */}
+                    {!isBreathingExercise && (
+                        <div className="absolute top-44 left-1/2 -translate-x-1/2 z-30">
+                            <div className="bg-white/95 backdrop-blur-md rounded-2xl px-8 py-4 shadow-xl min-w-[300px]">
+                                {/* Confidence indicator */}
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-300 ${detectionConfidence > 0.7 ? 'bg-green-500' :
+                                                    detectionConfidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'
+                                                }`}
+                                            style={{ width: `${detectionConfidence * 100}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-xs text-gray-500 font-medium">
+                                        {Math.round(detectionConfidence * 100)}%
+                                    </span>
+                                </div>
+
+                                {/* Phase name */}
+                                <p className="text-xl font-bold text-gray-800 text-center">{currentPhase}</p>
+
+                                {/* Feedback */}
+                                {phaseFeedback && (
+                                    <p className="text-sm text-gray-600 text-center mt-1">{phaseFeedback}</p>
+                                )}
+
+                                {/* Phase progress dots */}
+                                <div className="flex justify-center gap-2 mt-3">
+                                    {[0, 1, 2, 3].slice(0, Math.ceil(1 / Math.max(0.25, phaseProgress || 0.25))).map((_, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`w-3 h-3 rounded-full transition-all ${idx <= Math.floor(phaseProgress * 4) ? 'bg-pink-500' : 'bg-gray-300'
+                                                }`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Feedback */}
                     {currentValidation && currentValidation.feedback.length > 0 && (
                         <div className="absolute bottom-8 left-8 right-8 z-30">
                             <div className={`backdrop-blur-md rounded-3xl p-7 shadow-2xl ${currentValidation.isCorrect ? 'bg-green-500/95' : 'bg-red-500/95'
                                 }`}>
-                                {currentValidation.feedback.map((fb, idx) => (
+                                {currentValidation.feedback.slice(0, 2).map((fb, idx) => (
                                     <p key={idx} className="text-white text-2xl font-bold mb-2">
                                         {fb}
                                     </p>
@@ -652,11 +828,13 @@ export default function ExerciseSessionPage() {
                             <div className="bg-white/25 backdrop-blur-md rounded-3xl p-8 shadow-xl">
                                 <Trophy className="w-14 h-14 mx-auto mb-4 text-yellow-300" />
                                 <p className="text-6xl font-black mb-3">{repCount}</p>
-                                <p className="text-xl opacity-90 font-semibold">Repetisi</p>
+                                <p className="text-xl opacity-90 font-semibold">
+                                    {isBreathingExercise ? 'Siklus' : 'Repetisi'}
+                                </p>
                             </div>
                             <div className="bg-white/25 backdrop-blur-md rounded-3xl p-8 shadow-xl">
-                                <Sparkles className="w-14 h-14 mx-auto mb-4 text-blue-300" />
-                                <p className="text-6xl font-black mb-3">{sessionDuration}s</p>
+                                <Timer className="w-14 h-14 mx-auto mb-4 text-blue-300" />
+                                <p className="text-6xl font-black mb-3">{formatTime(sessionDuration)}</p>
                                 <p className="text-xl opacity-90 font-semibold">Durasi</p>
                             </div>
                             <div className="bg-white/25 backdrop-blur-md rounded-3xl p-8 shadow-xl">

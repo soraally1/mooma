@@ -76,6 +76,9 @@ export default function NutritionPage() {
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
                     <div className="text-center mb-10 animate-fade-in">
+                        <div className="flex justify-center mb-6">
+                            <img src="/expression/search.webp" alt="Mooma Searching" className="w-102 h-102 lg:w-102 lg:h-102 object-contain" />
+                        </div>
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#EE6983]/10 mb-4">
                             <ScanLine className="w-4 h-4 text-[#EE6983]" />
                             <span className="text-sm font-bold text-[#EE6983]">AI Food Scanner</span>
