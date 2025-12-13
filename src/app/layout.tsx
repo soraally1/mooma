@@ -18,6 +18,9 @@ const schoolbell = Schoolbell({
 export const metadata: Metadata = {
   title: "Mooma - Perjalanan Kehamilan yang Indah",
   description: "Platform terpercaya untuk mendampingi perjalanan kehamilan Anda",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -32,7 +35,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,

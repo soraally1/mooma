@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, Plus } from 'lucide-react';
+import { Save, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type EmotionType = 'sad' | 'neutral' | 'happy' | 'loved' | 'excited';
@@ -213,12 +213,12 @@ function NotesTrackerContent() {
 
     // Show success message and redirect to main notes page
     alert('Catatan berhasil disimpan!');
-    router.push('/pages/ceritamooma');
+    router.push('/pages/ceritamooma/jurnal');
   };
 
   const handleCancel = () => {
     if (window.confirm('Apakah Anda yakin ingin membatalkan? Perubahan tidak akan disimpan.')) {
-      router.push('/pages/ceritamooma');
+      router.push('/pages/ceritamooma/jurnal');
     }
   };
 
@@ -230,163 +230,176 @@ function NotesTrackerContent() {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
-
   return (
     <div className="min-h-screen bg-[#FFF5E4]">
-      {/* Header */}
-      <header className="bg-[#B13455] text-white p-4 flex justify-between items-center">
-        <button
-          onClick={handleCancel}
-          className="p-2 text-white hover:bg-[#EE6983] rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-lg font-bold">
-          {editId ? 'Edit Catatan' : 'Catatan Baru'}
-        </h1>
-        <button
-          className="bg-white text-[#EE6983] hover:bg-gray-100 px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1 transition-colors"
-          onClick={handleSave}
-        >
-          <Save className="w-4 h-4" />
-          Simpan
-        </button>
-      </header>
-
-      <main className="p-4 max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl p-6 shadow-md mt-4">
-          {isEditing ? (
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full text-[#EE6983] text-xl font-bold mb-4 bg-transparent border-b-2 border-[#EE6983] pb-2 focus:outline-none focus:border-[#EE6983] placeholder-[#EE6983] placeholder-opacity-50"
-              placeholder="Judul catatan"
-            />
-          ) : (
-            <h1 className="text-[#EE6983] text-xl font-bold mb-4">{note.title}</h1>
-          )}
-
-          {isEditing ? (
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full min-h-[100px] mb-4 bg-transparent focus:outline-none resize-none text-gray-700 placeholder-[#EE6983] placeholder-opacity-50"
-              placeholder="Tulis ceritamu di sini..."
-            />
-          ) : (
-            <p className="text-gray-700 mb-4 whitespace-pre-line">{note.content}</p>
-          )}
-
-          <div className="mb-4">
-            {isEditing ? (
-              <div className="mb-4">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageChange}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="bg-[#FFF5E4] text-[#B13455] px-4 py-2 rounded-lg text-sm font-medium border border-[#EE6983] hover:bg-[#FFE4E9] transition-colors"
-                >
-                  {note.imageUrl ? 'Ganti Gambar' : 'Tambah Gambar'}
-                </button>
-              </div>
-            ) : null}
-
-            {note.imageUrl && (
-              <div className="relative rounded-xl overflow-hidden mb-4">
-                <img
-                  src={note.imageUrl}
-                  alt="Catatan kehamilan"
-                  className="w-full h-48 object-cover rounded-lg border-2 border-[#EE6983]"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-            <div className="flex space-x-2">
-              {Object.entries(emotionIcons).map(([emotion, emoji]) => (
-                <button
-                  key={emotion}
-                  className={`p-2 rounded-full transition-colors text-2xl ${selectedEmotion === emotion
-                      ? 'bg-[#FFE4E9] border-2 border-[#EE6983]'
-                      : 'bg-[#FFF5E4] hover:bg-[#FFE4E9]'
-                    }`}
-                  onClick={() => setSelectedEmotion(emotion as EmotionType)}
-                  disabled={!isEditing}
-                  aria-label={emotion}
-                >
-                  {emoji}
-                </button>
+      {/* Notebook Section */}
+      <div className="animate-fade-in py-6 md:py-12 px-2 sm:px-4 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Notebook Container */}
+          <div className="bg-white rounded-2xl md:rounded-[24px] shadow-md overflow-hidden relative min-h-[500px] md:min-h-[700px] transition-shadow duration-500 hover:shadow-lg">
+            <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-14 md:w-16 lg:w-20 bg-gradient-to-r from-[#1a1a1a] to-[#2c2c2c] z-20 flex flex-col items-center py-4 sm:py-6 md:py-8 gap-3 sm:gap-4 md:gap-5">
+              {[...Array(14)].map((_, i) => (
+                <div key={i} className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] border border-gray-600 relative hover:scale-110 transition-transform">
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 bg-[#0a0a0a] rounded-full shadow-sm"></div>
+                </div>
               ))}
             </div>
 
-            {!isEditing && (
-              <span className="text-xs text-[#EE6983] font-medium">
-                Diperbarui: {formatDate(note.updatedAt)}
-              </span>
-            )}
-          </div>
+            {/* Page Binding Shadow */}
+            <div className="absolute left-11 sm:left-13 md:left-14 lg:left-18 top-0 bottom-0 w-6 md:w-8 bg-gradient-to-r from-gray-400/30 via-gray-300/20 to-transparent z-10 pointer-events-none"></div>
 
-          {/* Symptom Tracker */}
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <h3 className="text-[#EE6983] font-bold mb-3">Gejala yang Dirasakan</h3>
-            {isEditing ? (
-              <div className="grid grid-cols-2 gap-2">
-                {symptoms.map((symptom) => (
-                  <label
-                    key={symptom.id}
-                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${symptom.checked
-                        ? 'bg-[#FFE4E9] border border-[#EE6983]'
-                        : 'bg-[#FFF5E4] hover:bg-[#FFE4E9]'
-                      }`}
+            {/* Paper Content */}
+            <div className="pl-16 sm:pl-18 md:pl-20 lg:pl-28 pr-4 sm:pr-6 md:pr-8 lg:pr-16 py-6 sm:py-8 md:py-12 bg-gradient-to-br from-[#fffef8] to-[#fffdf0] min-h-full relative">
+              {/* Lined Paper Effect */}
+              <div className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: 'linear-gradient(transparent 0, transparent calc(2rem - 1px), #e8e8e8 calc(2rem - 1px), #e8e8e8 2rem)',
+                  backgroundSize: '100% 2rem',
+                  marginTop: '3rem'
+                }}>
+              </div>
+
+              {/* Red Margin Line */}
+              <div className="absolute left-20 sm:left-22 md:left-24 lg:left-36 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-red-300/60 to-transparent z-0"></div>
+
+              {/* Header on Paper */}
+              <header className="relative z-10 mb-6 sm:mb-8 md:mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-4 pb-3 md:pb-4 border-b-2 border-[#B13455]/40">
+                <div className="flex-1">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#B13455] mb-1 md:mb-2">
+                    {editId ? 'Edit Catatan' : 'Catatan Baru'}
+                  </h1>
+                  <p className="text-gray-600 text-sm sm:text-base md:text-lg">
+                    {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-all hover:scale-105 active:scale-95 text-sm sm:text-base font-medium"
+                    aria-label="Batal"
                   >
+                    Batal
+                  </button>
+                  <button
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#B13455] hover:bg-[#D64D6B] text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md"
+                    onClick={handleSave}
+                    aria-label="Simpan catatan"
+                  >
+                    <Save className="w-4 h-4" />
+                    Simpan
+                  </button>
+                </div>
+              </header>
+
+              <main className="relative z-10 mt-4 sm:mt-6 md:mt-8">
+                <div className="space-y-6 sm:space-y-8">
+                  {/* Title Input */}
+                  <div>
                     <input
-                      type="checkbox"
-                      checked={symptom.checked}
-                      onChange={() => handleSymptomToggle(symptom.id)}
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full text-2xl sm:text-3xl md:text-4xl font-semibold text-[#2c2c2c] bg-transparent border-none focus:outline-none placeholder-gray-400"
+                      placeholder="Judul catatan..."
+                    />
+                  </div>
+
+                  {/* Content Textarea */}
+                  <div>
+                    <textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="w-full min-h-[200px] sm:min-h-[250px] md:min-h-[300px] text-base sm:text-lg md:text-xl leading-relaxed sm:leading-loose md:leading-[2.5rem] text-gray-700 bg-transparent border-none focus:outline-none resize-none placeholder-gray-400"
+                      placeholder="Tulis ceritamu di sini..."
+                    />
+                  </div>
+
+                  {/* Image Section */}
+                  <div className="mb-4 sm:mb-6">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageChange}
+                      accept="image/*"
                       className="hidden"
                     />
-                    <span className="text-xl mr-2">{symptom.emoji}</span>
-                    <span className="text-sm text-[#EE6983]">{symptom.name}</span>
-                  </label>
-                ))}
-              </div>
-            ) : note.symptoms.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {symptoms
-                  .filter(s => note.symptoms.includes(s.id))
-                  .map(symptom => (
-                    <span
-                      key={symptom.id}
-                      className="inline-flex items-center bg-[#FFE4E9] text-[#EE6983] px-3 py-1 rounded-full text-sm"
-                    >
-                      <span className="mr-1">{symptom.emoji}</span>
-                      {symptom.name}
-                    </span>
-                  ))
-                }
-              </div>
-            ) : (
-              <p className="text-gray-500 text-sm">Tidak ada gejala yang dicatat</p>
-            )}
+                    {note.imageUrl ? (
+                      <div className="mb-4 p-2 sm:p-3 bg-white shadow-sm inline-block max-w-xs sm:max-w-sm border border-gray-200 hover:shadow-md transition-shadow">
+                        <img
+                          src={note.imageUrl}
+                          alt="Foto kenangan"
+                          className="w-full h-32 sm:h-40 md:h-48 object-cover filter sepia-[0.15] rounded-sm"
+                        />
+                        <div className="text-center text-sm text-gray-500 mt-2 italic">Foto Kenangan</div>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="mt-2 w-full bg-[#B13455]/10 text-[#B13455] px-3 py-2 rounded-lg text-sm font-medium hover:bg-[#B13455]/20 transition-colors"
+                        >
+                          Ganti Gambar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-2 bg-[#B13455]/10 text-[#B13455] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#B13455]/20 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Tambah Gambar
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Emotion Selector */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-[#B13455] mb-3">Bagaimana perasaanmu?</h3>
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                      {Object.entries(emotionIcons).map(([emotion, emoji]) => (
+                        <button
+                          key={emotion}
+                          className={`p-2 sm:p-3 rounded-full transition-all text-2xl sm:text-3xl ${selectedEmotion === emotion
+                            ? 'bg-yellow-50 border-2 border-[#B13455] scale-110'
+                            : 'bg-gray-50 hover:bg-yellow-50/50 hover:scale-105'
+                            }`}
+                          onClick={() => setSelectedEmotion(emotion as EmotionType)}
+                          aria-label={emotion}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Symptom Tracker */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <h3 className="text-lg sm:text-xl font-semibold text-[#B13455] mb-3">Gejala yang Dirasakan</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                      {symptoms.map((symptom) => (
+                        <label
+                          key={symptom.id}
+                          className={`flex items-center p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${symptom.checked
+                            ? 'bg-red-50 border-2 border-[#B13455]'
+                            : 'bg-gray-50 hover:bg-red-50/50 border-2 border-transparent'
+                            }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={symptom.checked}
+                            onChange={() => handleSymptomToggle(symptom.id)}
+                            className="hidden"
+                          />
+                          <span className="text-xl sm:text-2xl mr-2 sm:mr-3">{symptom.emoji}</span>
+                          <span className="text-sm sm:text-base text-gray-700 font-medium">{symptom.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </main>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

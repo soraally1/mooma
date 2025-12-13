@@ -21,6 +21,7 @@
     "react-dom": "19.2.0",
     "react-hook-form": "^7.66.0",
     "react-hot-toast": "^2.6.0",
+    "react-pageflip": "^2.0.3",
     "yup": "^1.7.1"
   },
   "devDependencies": {

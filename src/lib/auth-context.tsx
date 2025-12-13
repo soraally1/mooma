@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { User } from 'firebase/auth';
 import { AuthService, UserData } from './auth';
 
@@ -20,6 +21,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Define public paths that don't require authentication
+  const publicPaths = ['/', '/pages/login', '/pages/register', '/pages/landingpage'];
 
   useEffect(() => {
     const unsubscribe = AuthService.onAuthStateChange(async (user) => {
@@ -35,6 +41,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return unsubscribe;
   }, []);
+
+  // Protect routes
+  useEffect(() => {
+    if (!loading) {
+      const isPublicPath = publicPaths.includes(pathname);
+      if (!user && !isPublicPath) {
+        router.push('/pages/login');
+      }
+    }
+  }, [user, loading, pathname, router]);
 
   const signUp = async (data: any) => {
     setLoading(true);
