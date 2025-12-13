@@ -127,11 +127,18 @@ export default function ProfilePage() {
     return () => unsubscribe();
   }, [router]);
 
+  // Helper to parse nutrition values (e.g., "15g" -> 15)
+  const parseNutritionValue = (val: string) => {
+    if (!val) return 0;
+    const match = val.match(/(\d+(\.\d+)?)/);
+    return match ? parseFloat(match[0]) : 0;
+  };
+
   // Calculate nutrition totals from logs
   const nutritionTotals = nutritionLogs.reduce((acc, log) => {
-    const protein = parseFloat(log.nutrition?.protein || '0') || 0;
-    const carbs = parseFloat(log.nutrition?.carbs || '0') || 0;
-    const fat = parseFloat(log.nutrition?.fat || '0') || 0;
+    const protein = parseNutritionValue(log.nutrition?.protein);
+    const carbs = parseNutritionValue(log.nutrition?.carbs);
+    const fat = parseNutritionValue(log.nutrition?.fat);
     return {
       protein: acc.protein + protein,
       carbs: acc.carbs + carbs,

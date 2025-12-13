@@ -129,7 +129,7 @@ export default function NutritionPage() {
                         </div>
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#EE6983]/10 mb-4">
                             <ScanLine className="w-4 h-4 text-[#EE6983]" />
-                            <span className="text-sm font-bold text-[#EE6983]">AI Food Scanner</span>
+                            <span className="text-sm font-bold text-[#EE6983]">Pemindai Makanan AI</span>
                         </div>
                         <h1 className="text-4xl lg:text-5xl font-black text-[#B13455] mb-4">
                             Cek Nutrisi Makanan
@@ -163,7 +163,7 @@ export default function NutritionPage() {
                             <div className="relative">
                                 <img
                                     src={imagePreview}
-                                    alt="Food Preview"
+                                    alt="Pratinjau Makanan"
                                     className="w-full h-80 object-cover rounded-[2rem] shadow-lg"
                                 />
                                 {!loading && (
@@ -229,7 +229,9 @@ export default function NutritionPage() {
                                             .filter(([key]) => key !== 'protein' && key !== 'vitamins')
                                             .map(([key, value]) => (
                                                 <div key={key} className="bg-gray-50 p-4 rounded-2xl">
-                                                    <p className="text-sm text-gray-500 capitalize mb-1">{key}</p>
+                                                    <p className="text-sm text-gray-500 capitalize mb-1">
+                                                        {key === 'carbs' ? 'Karbohidrat' : key === 'fat' ? 'Lemak' : key}
+                                                    </p>
                                                     <p className="text-lg font-bold text-gray-700">{value}</p>
                                                 </div>
                                             ))}
@@ -241,7 +243,7 @@ export default function NutritionPage() {
                                     {analysis.benefits.length > 0 && (
                                         <div className="bg-green-50 rounded-[2.5rem] p-8 border border-green-100">
                                             <h3 className="text-xl font-black text-green-800 mb-4 flex items-center gap-2">
-                                                <CheckCircle2 className="w-5 h-5" /> Yang Baik (The Good)
+                                                <CheckCircle2 className="w-5 h-5" /> Manfaat untuk Bunda & Janin
                                             </h3>
                                             <ul className="space-y-2">
                                                 {analysis.benefits.map((benefit, idx) => (
@@ -256,7 +258,7 @@ export default function NutritionPage() {
                                     {analysis.risks.length > 0 && (
                                         <div className="bg-red-50 rounded-[2.5rem] p-8 border border-red-100">
                                             <h3 className="text-xl font-black text-red-800 mb-4 flex items-center gap-2">
-                                                <AlertTriangle className="w-5 h-5" /> Yang Buruk (The Bad)
+                                                <AlertTriangle className="w-5 h-5" /> Hal yang Perlu Diperhatikan
                                             </h3>
                                             <ul className="space-y-2">
                                                 {analysis.risks.map((risk, idx) => (
