@@ -279,7 +279,7 @@ export default function ProfilePage() {
             </div>
             <div className="rounded-3xl p-6 text-center text-white shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 border-4 border-white" style={{ backgroundColor: '#EE6983' }}>
               <p className="text-sm font-bold mb-3">Tekanan darah</p>
-              <p className="text-4xl font-black">{pregnancyData.tekananDarah || '-'}</p>
+              <p className="text-3xl lg:text-4xl font-black break-words">{pregnancyData.tekananDarah || '-'}</p>
               <p className="text-sm font-bold mt-2">mmhg</p>
             </div>
             <div className="rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
@@ -331,34 +331,34 @@ export default function ProfilePage() {
       </section>
 
       {/* Content Section */}
-      <div className="px-4 py-6 space-y-6" style={{ backgroundColor: '#EE6983' }}>
+      <div className="px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6" style={{ backgroundColor: '#EE6983' }}>
 
         {/* Asupan Nutrisi - Based on nutritionLogs */}
-        <div className="rounded-3xl p-7 shadow-xl" style={{ backgroundColor: '#FFF5E4' }}>
+        <div className="rounded-3xl p-7 shadow-xl lg:col-span-8" style={{ backgroundColor: '#FFF5E4' }}>
           <h3 className="text-[#EE6983] font-bold text-lg mb-6">Asupan Nutrisi Hari Ini</h3>
           {loadingNutrition ? (
             <div className="flex justify-center py-8">
               <Loader className="w-8 h-8 animate-spin text-[#EE6983]" />
             </div>
           ) : nutritionLogs.length > 0 ? (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-4xl font-black text-[#EE6983]">{Math.round(nutritionTotals.protein)}g</p>
-                <p className="text-sm text-[#EE6983] font-bold mt-2">Protein</p>
+                <p className="text-3xl lg:text-4xl font-black text-[#EE6983]">{Math.round(nutritionTotals.protein)}g</p>
+                <p className="text-xs lg:text-sm text-[#EE6983] font-bold mt-2">Protein</p>
               </div>
               <div className="text-center">
-                <p className="text-4xl font-black text-[#EE6983]">{Math.round(nutritionTotals.carbs)}g</p>
-                <p className="text-sm text-[#EE6983] font-bold mt-2">Karbohidrat</p>
+                <p className="text-3xl lg:text-4xl font-black text-[#EE6983]">{Math.round(nutritionTotals.carbs)}g</p>
+                <p className="text-xs lg:text-sm text-[#EE6983] font-bold mt-2">Karbohidrat</p>
               </div>
               <div className="text-center">
-                <p className="text-4xl font-black text-[#EE6983]">{Math.round(nutritionTotals.fat)}g</p>
-                <p className="text-sm text-[#EE6983] font-bold mt-2">Lemak</p>
+                <p className="text-3xl lg:text-4xl font-black text-[#EE6983]">{Math.round(nutritionTotals.fat)}g</p>
+                <p className="text-xs lg:text-sm text-[#EE6983] font-bold mt-2">Lemak</p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full border-4 border-[#EE6983] flex items-center justify-center mx-auto mb-2">
-                  <p className="text-2xl font-black text-[#EE6983]">{overallPercent}%</p>
+                <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-full border-4 border-[#EE6983] flex items-center justify-center mx-auto mb-2">
+                  <p className="text-xl lg:text-2xl font-black text-[#EE6983]">{overallPercent}%</p>
                 </div>
-                <p className="text-sm text-[#EE6983] font-bold">Terpenuhi</p>
+                <p className="text-xs lg:text-sm text-[#EE6983] font-bold">Terpenuhi</p>
               </div>
             </div>
           ) : (
@@ -375,7 +375,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Kebutuhan Nutrisi Mooma */}
-        <div className="rounded-3xl p-6 shadow-lg" style={{ backgroundColor: '#FFF5E4' }}>
+        <div className="rounded-3xl p-6 shadow-lg lg:col-span-4" style={{ backgroundColor: '#FFF5E4' }}>
           <h3 className="text-[#EE6983] font-bold text-lg mb-5">Kebutuhan Nutrisi Mooma</h3>
           <div className="space-y-5">
             {[
@@ -403,7 +403,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Riwayat Makanan - Based on nutritionLogs */}
-        <div>
+        <div className="lg:col-span-7">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-bold text-lg">Riwayat Makanan</h3>
             <button
@@ -463,7 +463,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Resep Tersimpan - Based on recipeService */}
-        <div>
+        <div className="lg:col-span-5">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-bold text-lg">Resep Tersimpan</h3>
             <button
