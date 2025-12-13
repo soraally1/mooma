@@ -10,16 +10,15 @@ Analyze the image and return a JSON object with the following structure:
 {
   "foodName": "Name of the food identified",
   "calories": "Estimated calories (e.g., '350 kcal')",
-  "isGoodForPregnancy": boolean,
   "verdict": "Safe" | "Limit" | "Avoid",
   "nutrition": {
     "protein": "e.g., 15g",
+    "vitamins": "Key vitamins present (e.g., 'Vitamin C, Iron')",
     "carbs": "e.g., 40g",
-    "fat": "e.g., 10g",
-    "vitamins": "Key vitamins present (e.g., 'Vitamin C, Iron')"
+    "fat": "e.g., 10g"
   },
-  "benefits": ["List of 2-3 benefits for pregnancy"],
-  "risks": ["List of potential risks if any (e.g., 'High mercury', 'Unpasteurized cheese')"],
+  "benefits": ["List of 2-3 benefits for pregnancy (The Good)"],
+  "risks": ["List of potential risks if any (The Bad)"],
   "advice": "A short, friendly advice paragraph for the mom-to-be."
 }
 
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'llama-3.2-11b-vision-preview',
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct', // User specified model
                 messages: [
                     {
                         role: 'user',

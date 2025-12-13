@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -65,18 +65,18 @@ const mockNotes: Record<string, NoteData> = {
   },
 };
 
-export default function NotesTracker() {
+function NotesTrackerContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
-  
+
   const [note, setNote] = useState<NoteData>({
     ...defaultNote,
     id: '',
     createdAt: new Date(),
     updatedAt: new Date(),
   });
-  
+
   const [isEditing, setIsEditing] = useState(true);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -90,8 +90,8 @@ export default function NotesTracker() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSymptomToggle = (symptomId: string) => {
-    setSymptoms(prev => 
-      prev.map(s => 
+    setSymptoms(prev =>
+      prev.map(s =>
         s.id === symptomId ? { ...s, checked: !s.checked } : s
       )
     );
@@ -103,7 +103,7 @@ export default function NotesTracker() {
       // Get all notes from localStorage
       const savedData = localStorage.getItem('pregnancy-notes');
       let savedNotes = [];
-      
+
       // Handle both array and object formats
       if (savedData) {
         const parsed = JSON.parse(savedData);
@@ -114,15 +114,15 @@ export default function NotesTracker() {
           savedNotes = Object.values(parsed);
         }
       }
-      
+
       // Try to find the note by ID in localStorage or mock data
       let existingNote = savedNotes.find((note: any) => note && note.id === editId);
-      
+
       // If not found in localStorage, check mock data (for development)
       if (!existingNote && mockNotes[editId]) {
         existingNote = mockNotes[editId];
       }
-      
+
       if (existingNote) {
         // Convert string dates back to Date objects
         const noteWithDates = {
@@ -130,7 +130,7 @@ export default function NotesTracker() {
           createdAt: new Date(existingNote.createdAt),
           updatedAt: new Date(existingNote.updatedAt)
         };
-        
+
         setNote(noteWithDates);
         setTitle(noteWithDates.title);
         setContent(noteWithDates.content);
@@ -162,11 +162,11 @@ export default function NotesTracker() {
       createdAt: note.createdAt || now,
       updatedAt: now,
     };
-    
+
     // Get existing notes from localStorage
     const savedData = localStorage.getItem('pregnancy-notes');
     let existingNotes = [];
-    
+
     // Handle both array and object formats
     if (savedData) {
       const parsed = JSON.parse(savedData);
@@ -177,22 +177,22 @@ export default function NotesTracker() {
         existingNotes = Object.values(parsed);
       }
     }
-    
+
     // Ensure we have an array
     if (!Array.isArray(existingNotes)) {
       existingNotes = [];
     }
-    
+
     // Prepare the note for storage (convert dates to ISO strings)
     const noteToSave = {
       ...updatedNote,
       createdAt: updatedNote.createdAt.toISOString(),
       updatedAt: updatedNote.updatedAt.toISOString()
     };
-    
+
     let updatedNotes;
     const noteIndex = existingNotes.findIndex((n: any) => n && n.id === updatedNote.id);
-    
+
     if (noteIndex !== -1) {
       // Update existing note
       updatedNotes = [
@@ -204,18 +204,18 @@ export default function NotesTracker() {
       // Add new note
       updatedNotes = [...existingNotes, noteToSave];
     }
-    
+
     // Save to localStorage
     localStorage.setItem('pregnancy-notes', JSON.stringify(updatedNotes));
-    
+
     // Update local state
     setNote(updatedNote);
-    
+
     // Show success message and redirect to main notes page
     alert('Catatan berhasil disimpan!');
     router.push('/pages/ceritamooma');
   };
-  
+
   const handleCancel = () => {
     if (window.confirm('Apakah Anda yakin ingin membatalkan? Perubahan tidak akan disimpan.')) {
       router.push('/pages/ceritamooma');
@@ -244,7 +244,7 @@ export default function NotesTracker() {
     <div className="min-h-screen bg-[#FFF5E4]">
       {/* Header */}
       <header className="bg-[#B13455] text-white p-4 flex justify-between items-center">
-        <button 
+        <button
           onClick={handleCancel}
           className="p-2 text-white hover:bg-[#EE6983] rounded-full transition-colors"
         >
@@ -253,7 +253,7 @@ export default function NotesTracker() {
         <h1 className="text-lg font-bold">
           {editId ? 'Edit Catatan' : 'Catatan Baru'}
         </h1>
-        <button 
+        <button
           className="bg-white text-[#EE6983] hover:bg-gray-100 px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1 transition-colors"
           onClick={handleSave}
         >
@@ -305,7 +305,7 @@ export default function NotesTracker() {
                 </button>
               </div>
             ) : null}
-            
+
             {note.imageUrl && (
               <div className="relative rounded-xl overflow-hidden mb-4">
                 <img
@@ -322,11 +322,10 @@ export default function NotesTracker() {
               {Object.entries(emotionIcons).map(([emotion, emoji]) => (
                 <button
                   key={emotion}
-                  className={`p-2 rounded-full transition-colors text-2xl ${
-                    selectedEmotion === emotion 
-                      ? 'bg-[#FFE4E9] border-2 border-[#EE6983]' 
+                  className={`p-2 rounded-full transition-colors text-2xl ${selectedEmotion === emotion
+                      ? 'bg-[#FFE4E9] border-2 border-[#EE6983]'
                       : 'bg-[#FFF5E4] hover:bg-[#FFE4E9]'
-                  }`}
+                    }`}
                   onClick={() => setSelectedEmotion(emotion as EmotionType)}
                   disabled={!isEditing}
                   aria-label={emotion}
@@ -335,7 +334,7 @@ export default function NotesTracker() {
                 </button>
               ))}
             </div>
-            
+
             {!isEditing && (
               <span className="text-xs text-[#EE6983] font-medium">
                 Diperbarui: {formatDate(note.updatedAt)}
@@ -349,13 +348,12 @@ export default function NotesTracker() {
             {isEditing ? (
               <div className="grid grid-cols-2 gap-2">
                 {symptoms.map((symptom) => (
-                  <label 
+                  <label
                     key={symptom.id}
-                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${
-                      symptom.checked 
-                        ? 'bg-[#FFE4E9] border border-[#EE6983]' 
+                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${symptom.checked
+                        ? 'bg-[#FFE4E9] border border-[#EE6983]'
                         : 'bg-[#FFF5E4] hover:bg-[#FFE4E9]'
-                    }`}
+                      }`}
                   >
                     <input
                       type="checkbox"
@@ -373,8 +371,8 @@ export default function NotesTracker() {
                 {symptoms
                   .filter(s => note.symptoms.includes(s.id))
                   .map(symptom => (
-                    <span 
-                      key={symptom.id} 
+                    <span
+                      key={symptom.id}
                       className="inline-flex items-center bg-[#FFE4E9] text-[#EE6983] px-3 py-1 rounded-full text-sm"
                     >
                       <span className="mr-1">{symptom.emoji}</span>
@@ -390,5 +388,13 @@ export default function NotesTracker() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function NotesTracker() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotesTrackerContent />
+    </Suspense>
   );
 }

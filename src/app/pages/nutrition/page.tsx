@@ -16,14 +16,38 @@ export default function NutritionPage() {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const compressImage = (base64Str: string, maxWidth = 800, quality = 0.7): Promise<string> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = base64Str;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+        });
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
+            reader.onloadend = async () => {
                 const base64String = reader.result as string;
-                setImagePreview(base64String);
-                analyzeImage(base64String);
+                const compressedImage = await compressImage(base64String);
+                setImagePreview(compressedImage);
+                analyzeImage(compressedImage);
             };
             reader.readAsDataURL(file);
         }
@@ -48,6 +72,7 @@ export default function NutritionPage() {
                         benefits: result.benefits,
                         risks: result.risks,
                         advice: result.advice,
+                        imageBase64: base64Image,
                         timestamp: serverTimestamp()
                     });
                     toast.success('Hasil analisis disimpan ke jurnal!');
@@ -186,12 +211,28 @@ export default function NutritionPage() {
                                         <Sparkles className="w-5 h-5" /> Kandungan Nutrisi
                                     </h3>
                                     <div className="grid grid-cols-2 gap-4">
-                                        {Object.entries(analysis.nutrition).map(([key, value]) => (
-                                            <div key={key} className="bg-[#FFF5E4] p-4 rounded-2xl">
-                                                <p className="text-sm text-gray-500 capitalize mb-1">{key}</p>
-                                                <p className="text-lg font-bold text-[#B13455]">{value}</p>
+                                        {/* Highlight Protein and Vitamins */}
+                                        {analysis.nutrition.protein && (
+                                            <div className="bg-[#FFF5E4] p-4 rounded-2xl border-2 border-[#EE6983]/20">
+                                                <p className="text-sm text-[#EE6983] font-bold mb-1">Protein</p>
+                                                <p className="text-lg font-black text-[#B13455]">{analysis.nutrition.protein}</p>
                                             </div>
-                                        ))}
+                                        )}
+                                        {analysis.nutrition.vitamins && (
+                                            <div className="bg-[#FFF5E4] p-4 rounded-2xl border-2 border-[#EE6983]/20">
+                                                <p className="text-sm text-[#EE6983] font-bold mb-1">Vitamin</p>
+                                                <p className="text-lg font-black text-[#B13455]">{analysis.nutrition.vitamins}</p>
+                                            </div>
+                                        )}
+
+                                        {Object.entries(analysis.nutrition)
+                                            .filter(([key]) => key !== 'protein' && key !== 'vitamins')
+                                            .map(([key, value]) => (
+                                                <div key={key} className="bg-gray-50 p-4 rounded-2xl">
+                                                    <p className="text-sm text-gray-500 capitalize mb-1">{key}</p>
+                                                    <p className="text-lg font-bold text-gray-700">{value}</p>
+                                                </div>
+                                            ))}
                                     </div>
                                 </div>
 
@@ -200,7 +241,7 @@ export default function NutritionPage() {
                                     {analysis.benefits.length > 0 && (
                                         <div className="bg-green-50 rounded-[2.5rem] p-8 border border-green-100">
                                             <h3 className="text-xl font-black text-green-800 mb-4 flex items-center gap-2">
-                                                <CheckCircle2 className="w-5 h-5" /> Manfaat
+                                                <CheckCircle2 className="w-5 h-5" /> Yang Baik (The Good)
                                             </h3>
                                             <ul className="space-y-2">
                                                 {analysis.benefits.map((benefit, idx) => (
@@ -215,7 +256,7 @@ export default function NutritionPage() {
                                     {analysis.risks.length > 0 && (
                                         <div className="bg-red-50 rounded-[2.5rem] p-8 border border-red-100">
                                             <h3 className="text-xl font-black text-red-800 mb-4 flex items-center gap-2">
-                                                <AlertTriangle className="w-5 h-5" /> Perhatikan
+                                                <AlertTriangle className="w-5 h-5" /> Yang Buruk (The Bad)
                                             </h3>
                                             <ul className="space-y-2">
                                                 {analysis.risks.map((risk, idx) => (

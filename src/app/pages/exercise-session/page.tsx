@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PoseLandmarker, FilesetResolver, NormalizedLandmark } from '@mediapipe/tasks-vision';
 import { Play, Pause, RotateCcw, Trophy, X, Home, Sparkles, CheckCircle2, Timer, Wind, PauseCircle, AirVent, Activity, AlertCircle } from 'lucide-react';
@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 
 type ScreenState = 'tutorial' | 'countdown' | 'exercise' | 'paused' | 'results';
 
-export default function ExerciseSessionPage() {
+function ExerciseSessionContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const exerciseId = searchParams.get('exercise');
@@ -892,5 +892,20 @@ export default function ExerciseSessionPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function ExerciseSessionPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FFF5E4' }}>
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-[#EE6983] mb-4"></div>
+                    <p className="text-xl font-bold text-[#B13455]">Memuat...</p>
+                </div>
+            </div>
+        }>
+            <ExerciseSessionContent />
+        </Suspense>
     );
 }
