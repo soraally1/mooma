@@ -37,7 +37,7 @@ interface NutritionLog {
     vitamins: string;
   };
   verdict: 'Safe' | 'Limit' | 'Avoid';
-  createdAt: any;
+  timestamp: any;
   imageBase64?: string;
 }
 
@@ -108,7 +108,7 @@ export default function ProfilePage() {
         const q = query(
           nutritionRef,
           where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
+          orderBy('timestamp', 'desc'),
           limit(4)
         );
         const querySnapshot = await getDocs(q);
