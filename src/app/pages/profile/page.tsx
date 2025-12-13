@@ -38,6 +38,7 @@ interface NutritionLog {
   };
   verdict: 'Safe' | 'Limit' | 'Avoid';
   createdAt: any;
+  imageBase64?: string;
 }
 
 export default function ProfilePage() {
@@ -417,8 +418,12 @@ export default function ProfilePage() {
                   className="rounded-3xl p-4 flex items-center gap-4 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02]"
                   style={{ backgroundColor: '#FFF5E4' }}
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-200 to-orange-300 shrink-0 flex items-center justify-center text-2xl shadow-md">
-                    🍽️
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-200 to-orange-300 shrink-0 flex items-center justify-center text-2xl shadow-md overflow-hidden">
+                    {log.imageBase64 ? (
+                      <img src={log.imageBase64} alt={log.foodName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>🍽️</span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
