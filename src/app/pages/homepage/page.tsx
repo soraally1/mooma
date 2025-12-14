@@ -255,13 +255,14 @@ export default function Homepage() {
           </div>
           <div className="flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
-              { icon: ChefHat, label: 'Resep Mooma', delay: 'delay-0' },
-              { icon: Apple, label: 'Nutrisi Mooma', delay: 'delay-100' },
-              { icon: Stethoscope, label: 'Cerita Mooma', delay: 'delay-200' },
-              { icon: Heart, label: 'Mooma Sehat', delay: 'delay-300' },
+              { icon: ChefHat, label: 'Resep Mooma', delay: 'delay-0', route: '/pages/resep' },
+              { icon: Apple, label: 'Nutrisi Mooma', delay: 'delay-100', route: '/pages/nutrition' },
+              { icon: Stethoscope, label: 'Cerita Mooma', delay: 'delay-200', route: '/pages/ceritamooma' },
+              { icon: Heart, label: 'Mooma Sehat', delay: 'delay-300', route: '/pages/moomasehat' },
             ].map((feature, idx) => (
               <div
                 key={idx}
+                onClick={() => router.push(feature.route)}
                 className={`flex flex-col items-center gap-3 md:gap-4 cursor-pointer group animate-fade-in ${feature.delay} flex-shrink-0 w-28 md:w-auto`}
               >
                 {/* Icon Box */}
@@ -289,7 +290,7 @@ export default function Homepage() {
             <div className="rounded-2xl md:rounded-3xl lg:rounded-[2rem] p-6 md:p-8 lg:p-12 pr-32 md:pr-40 lg:pr-52 text-white shadow-xl md:shadow-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-1" style={{ backgroundColor: '#EE6983' }}>
               <div className="max-w-xs">
                 <p className="text-base md:text-lg lg:text-2xl font-bold mb-4 md:mb-6 lg:mb-8 leading-relaxed">Mulai olahraga untuk menjaga kesehatan Mooma dan bayi!</p>
-                <button className="bg-white text-[#EE6983] font-black py-2.5 md:py-3 lg:py-4 px-6 md:px-8 rounded-xl md:rounded-2xl hover:bg-yellow-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 text-sm md:text-base">
+                <button onClick={() => router.push('/pages/moomasehat')} className="bg-white text-[#EE6983] font-black py-2.5 md:py-3 lg:py-4 px-6 md:px-8 rounded-xl md:rounded-2xl hover:bg-yellow-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 text-sm md:text-base">
                   Mulai olahraga
                 </button>
               </div>
@@ -313,12 +314,13 @@ export default function Homepage() {
           <p className="text-[#B13455] text-sm lg:text-base mb-8 lg:mb-12 font-medium">Binggung mau masak apa hari ini? Yuk, cari resep sehat yang gizi.</p>
           <div className="grid grid-cols-3 gap-3 md:gap-4 lg:gap-6">
             {[
-              { icon: BookOpen, label: 'Buat resep', color: '#EE6983' },
-              { icon: BookOpen, label: 'Cari resep', color: '#E26884' },
-              { icon: BookOpen, label: 'Resep Terpopuler', color: '#D15570' },
+              { icon: BookOpen, label: 'Buat resep', color: '#EE6983', route: '/pages/resep?tab=create' },
+              { icon: BookOpen, label: 'Cari resep', color: '#E26884', route: '/pages/resep?tab=search' },
+              { icon: BookOpen, label: 'Resep Terpopuler', color: '#D15570', route: '/pages/resep?tab=popular' },
             ].map((recipe, idx) => (
               <button
                 key={idx}
+                onClick={() => router.push(recipe.route)}
                 className="rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 text-white text-xs md:text-sm lg:text-base font-black shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col items-center gap-2 md:gap-3 lg:gap-4 h-28 md:h-36 lg:h-44 justify-center transform hover:scale-105 hover:-translate-y-2 active:scale-95 group"
                 style={{ backgroundColor: recipe.color }}
               >
