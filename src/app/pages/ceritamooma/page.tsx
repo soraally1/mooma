@@ -11,6 +11,50 @@ import toast, { Toaster } from 'react-hot-toast';
 import { ConsultationMessage, generateMessageId, ttsService, consultationChatService } from '@/services/consultationService';
 
 type Mood = 'happy' | 'sad' | null;
+type Expression = 'happy' | 'sad' | 'think';
+
+// Helper function to analyze sentiment from AI response
+const analyzeMessageSentiment = (content: string): Expression => {
+    const lowerContent = content.toLowerCase();
+
+    // Keywords for different emotions
+    const happyKeywords = [
+        'hebat', 'bagus', 'luar biasa', 'sempurna', 'baik sekali', 'mantap', 'keren',
+        'senang', 'gembira', 'bahagia', 'selamat', 'sukses', 'berhasil',
+        'positive', 'optimis', 'semangat', 'ayo', 'yuk', '🌟', '💖', '✨', '🎉', '👏',
+        'bangga', 'amazing', 'wonderful', 'great', 'excellent'
+    ];
+
+    const sadKeywords = [
+        'sedih', 'khawatir', 'takut', 'cemas', 'stress', 'lelah', 'capek',
+        'susah', 'sulit', 'berat', 'sakit', 'tidak nyaman', 'pahit',
+        'mengerti', 'memahami', 'wajar', 'normal jika', 'perasaanmu',
+        'di sini untukmu', 'mendukungmu', 'menemanimu', '💙', '🤗', '💕',
+        'tenang', 'jangan khawatir', 'tidak apa-apa', 'akan baik-baik saja'
+    ];
+
+    // Count keyword matches
+    let happyScore = 0;
+    let sadScore = 0;
+
+    happyKeywords.forEach(keyword => {
+        if (lowerContent.includes(keyword)) happyScore++;
+    });
+
+    sadKeywords.forEach(keyword => {
+        if (lowerContent.includes(keyword)) sadScore++;
+    });
+
+    // Determine expression based on scores
+    if (sadScore > happyScore) {
+        return 'sad';
+    } else if (happyScore > sadScore) {
+        return 'happy';
+    } else {
+        // Default to user's selected mood if no clear sentiment
+        return 'think';
+    }
+};
 
 export default function ConsultationPage() {
     const [isSending, setIsSending] = useState(false);
@@ -22,6 +66,8 @@ export default function ConsultationPage() {
     const [pregnancyWeek, setPregnancyWeek] = useState<number | null>(null);
     const [selectedMood, setSelectedMood] = useState<Mood>(null);
     const [showMoodSelector, setShowMoodSelector] = useState(true);
+    const [currentExpression, setCurrentExpression] = useState<Expression>('happy');
+    const [messageExpressions, setMessageExpressions] = useState<Record<string, Expression>>({});
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -75,6 +121,10 @@ export default function ConsultationPage() {
         setSelectedMood(mood);
         setShowMoodSelector(false);
 
+        // Set initial expression based on mood
+        const initialExpression: Expression = mood === 'happy' ? 'happy' : 'sad';
+        setCurrentExpression(initialExpression);
+
         const moodMessages = {
             happy: `Hai ${userName}! 🌟 Senang melihatmu bahagia hari ini! ${pregnancyWeek ? `Di minggu ke-${pregnancyWeek} ini, ` : ''}ceritakan hal-hal seru yang membuatmu senang! 💖`,
             sad: `Hai ${userName}... 💕 Aku di sini untukmu. ${pregnancyWeek ? `Di minggu ke-${pregnancyWeek} kehamilan, ` : ''}wajar kalau ada hari yang berat. Ceritakan saja, aku siap mendengarkan 🤗`
@@ -87,6 +137,9 @@ export default function ConsultationPage() {
             timestamp: new Date(),
         };
         setMessages([welcomeMessage]);
+
+        // Store expression for this message
+        setMessageExpressions({ [welcomeMessage.id]: initialExpression });
 
         setTimeout(() => inputRef.current?.focus(), 300);
     };
@@ -109,6 +162,9 @@ export default function ConsultationPage() {
         setInputMessage('');
         setIsSending(true);
 
+        // Set thinking expression while processing
+        setCurrentExpression('think');
+
         try {
             const history = messages.map(msg => ({
                 role: msg.role,
@@ -130,9 +186,21 @@ export default function ConsultationPage() {
                 timestamp: new Date(),
             };
 
+            // Analyze sentiment and set appropriate expression
+            const detectedExpression = analyzeMessageSentiment(response);
+            setCurrentExpression(detectedExpression);
+
+            // Store this message's expression
+            setMessageExpressions(prev => ({
+                ...prev,
+                [assistantMessage.id]: detectedExpression
+            }));
+
             setMessages(prev => [...prev, assistantMessage]);
         } catch (error) {
             toast.error('Gagal mengirim pesan. Coba lagi ya!');
+            // Reset to previous expression on error
+            setCurrentExpression(selectedMood === 'happy' ? 'happy' : 'sad');
         } finally {
             setIsSending(false);
             inputRef.current?.focus();
@@ -230,9 +298,9 @@ export default function ConsultationPage() {
                         <div className="flex flex-col items-center py-6 lg:py-8">
                             <div className="relative">
                                 <img
-                                    src="/oona.svg"
+                                    src={`/expression/${currentExpression}.webp`}
                                     alt="Oona"
-                                    className={`w-44 h-44 lg:w-56 lg:h-56 object-contain ${isSending ? 'animate-bounce-slow' : ''}`}
+                                    className={`w-44 h-44 lg:w-56 lg:h-56 object-contain transition-all duration-500 ${isSending ? 'animate-bounce-slow' : ''}`}
                                 />
                                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
                                     <span className="px-4 py-1.5 rounded-full bg-[#EE6983] text-white text-sm font-bold shadow-lg">
@@ -263,9 +331,9 @@ export default function ConsultationPage() {
                                         {message.role === 'assistant' && (
                                             <div className="flex-shrink-0 mr-3">
                                                 <img
-                                                    src={selectedMood === 'happy' ? '/expression/happy.webp' : '/expression/sad.webp'}
+                                                    src={`/expression/${messageExpressions[message.id] || currentExpression}.webp`}
                                                     alt="Oona"
-                                                    className="w-10 h-10 object-contain"
+                                                    className="w-10 h-10 object-contain transition-opacity duration-300"
                                                 />
                                             </div>
                                         )}
