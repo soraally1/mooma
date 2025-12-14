@@ -327,25 +327,112 @@ ${collectedFields.length >= 21 ? '✓ Semua data sudah lengkap! Boleh selesaikan
 
     // Check if conversation should be marked as complete
     // Only mark as complete if AI explicitly says all data is collected
-    const completeKeywords = [
-      'semua informasi telah lengkap',
-      'data anda sudah lengkap',
-      'informasi lengkap telah dikumpulkan',
-      'percakapan selesai',
-      'data mooma telah tersimpan',
-      'terima kasih telah memberikan semua informasi',
-      'semua data telah terkumpul',
-      'data telah lengkap',
-      'informasi telah lengkap',
-      'pertanyaan selesai',
-      'data kehamilanmu berhasil disimpan',
-      'data anda telah tersimpan',
-      'terima kasih atas informasi lengkap',
-    ];
 
-    const isCompleteKeywordPresent = completeKeywords.some(keyword =>
-      assistantMessage.toLowerCase().includes(keyword)
+    // Helper function to normalize text for comparison
+    const normalizeText = (text: string): string => {
+      return text
+        .toLowerCase()
+        .replace(/[.,!?;:]/g, ' ') // Replace punctuation with spaces
+        .replace(/\s+/g, ' ')       // Normalize multiple spaces
+        .trim();
+    };
+
+    // Helper function to check if words are present with word boundaries
+    const containsWords = (text: string, words: string[]): boolean => {
+      const normalizedText = normalizeText(text);
+      const textWords = normalizedText.split(' ');
+      return words.every(word => textWords.includes(word));
+    };
+
+    // Helper function to calculate similarity score (simple Levenshtein-like)
+    const similarityScore = (str1: string, str2: string): number => {
+      const longer = str1.length > str2.length ? str1 : str2;
+      const shorter = str1.length > str2.length ? str2 : str1;
+
+      if (longer.length === 0) return 1.0;
+
+      let matches = 0;
+      for (let i = 0; i < shorter.length; i++) {
+        if (longer.includes(shorter[i])) matches++;
+      }
+
+      return matches / longer.length;
+    };
+
+    // Define completion patterns with different confidence levels
+    const completionPatterns = {
+      // High confidence - exact phrases (exact match or very close)
+      exactPhrases: [
+        'semua informasi telah lengkap',
+        'data anda sudah lengkap',
+        'informasi lengkap telah dikumpulkan',
+        'semua data telah terkumpul',
+        'data telah lengkap',
+        'informasi telah lengkap',
+        'data lengkap',
+        'data mooma telah tersimpan',
+        'data anda telah tersimpan',
+        'data kehamilanmu berhasil disimpan',
+      ],
+
+      // Medium confidence - key word combinations (must have all words)
+      keyWordCombinations: [
+        ['semua', 'informasi', 'lengkap'],
+        ['semua', 'data', 'lengkap'],
+        ['data', 'telah', 'lengkap'],
+        ['informasi', 'telah', 'lengkap'],
+        ['data', 'sudah', 'lengkap'],
+        ['semua', 'data', 'terkumpul'],
+        ['data', 'telah', 'disimpan'],
+        ['data', 'berhasil', 'disimpan'],
+        ['terima', 'kasih', 'semua', 'informasi'],
+        ['terima', 'kasih', 'informasi', 'lengkap'],
+        ['percakapan', 'selesai'],
+        ['pertanyaan', 'selesai'],
+      ],
+
+      // Low confidence - single strong completion words (needs additional context)
+      strongKeywords: [
+        'terkumpul',
+        'dikumpulkan',
+      ]
+    };
+
+    const normalizedMessage = normalizeText(assistantMessage);
+
+    // Check exact phrases (highest confidence)
+    const hasExactPhrase = completionPatterns.exactPhrases.some(phrase => {
+      const normalizedPhrase = normalizeText(phrase);
+      // Check exact match or high similarity
+      return normalizedMessage.includes(normalizedPhrase) ||
+        similarityScore(normalizedMessage, normalizedPhrase) > 0.85;
+    });
+
+    // Check key word combinations (medium confidence)
+    const hasKeyWordCombination = completionPatterns.keyWordCombinations.some(words =>
+      containsWords(normalizedMessage, words)
     );
+
+    // Check strong keywords with additional context (low confidence - needs "lengkap" or "tersimpan" nearby)
+    const hasStrongKeywordWithContext = completionPatterns.strongKeywords.some(keyword => {
+      if (!normalizedMessage.includes(keyword)) return false;
+
+      // Must also contain "lengkap", "tersimpan", "semua", or "berhasil" for context
+      const contextWords = ['lengkap', 'tersimpan', 'semua', 'berhasil'];
+      return contextWords.some(ctx => normalizedMessage.includes(ctx));
+    });
+
+    // Final determination: any of these conditions trigger completion detection
+    const isCompleteKeywordPresent = hasExactPhrase || hasKeyWordCombination || hasStrongKeywordWithContext;
+
+    // Log detection for debugging
+    if (isCompleteKeywordPresent) {
+      console.log('✓ Completion keyword detected:', {
+        hasExactPhrase,
+        hasKeyWordCombination,
+        hasStrongKeywordWithContext,
+      });
+    }
 
     const extractedData = parsedResponse.extractedData || {};
 
