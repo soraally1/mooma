@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Define public paths that don't require authentication
-  const publicPaths = ['/', '/pages/login', '/pages/register', '/pages/landingpage'];
+  const publicPaths = ['/', '/pages/login', '/pages/landingpage', '/pages/signup'];
 
   useEffect(() => {
     const unsubscribe = AuthService.onAuthStateChange(async (user) => {
