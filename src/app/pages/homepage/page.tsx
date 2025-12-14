@@ -339,7 +339,7 @@ export default function Homepage() {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex items-center gap-3 mb-8 lg:mb-12">
             <Stethoscope className="w-8 h-8 lg:w-10 lg:h-10 text-[#B13455]" />
-            <h3 className="font-black text-2xl lg:text-3xl text-[#B13455]">Konsultasi dengan Dokter Kami</h3>
+            <h3 className="font-black text-2xl lg:text-3xl text-[#B13455]">Konsultasi dengan Oona</h3>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -355,9 +355,9 @@ export default function Homepage() {
                   <MessageCircle className="w-8 h-8 lg:w-10 lg:h-10 shrink-0 mt-1 animate-bounce" />
                   <div>
                     <p className="text-base lg:text-lg font-bold leading-relaxed mb-2">Hai Mooma!</p>
-                    <p className="text-sm lg:text-base font-medium leading-relaxed mb-6">Apakah kamu siap untuk berbincang dengan dokter kita tentang perjalanan kehamilanmu? Kami siap membantu menjaga kesehatan Mooma dan bayi dengan konsultasi profesional.</p>
-                    <button className="bg-white text-[#EE6983] font-black py-3 lg:py-4 px-8 rounded-2xl hover:bg-yellow-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95">
-                      Mulai Konsultasi
+                    <p className="text-sm lg:text-base font-medium leading-relaxed mb-6">Apakah kamu siap untuk berbincang dengan Oona tentang perjalanan kehamilanmu? Kami siap membantu menjaga kesehatan mental dan fisik Mooma dan bayi dengan bercerita kepada oona.</p>
+                    <button onClick={() => router.push('/pages/ceritamooma')} className="bg-white text-[#EE6983] font-black py-3 lg:py-4 px-8 rounded-2xl hover:bg-yellow-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95">
+                      Mulai Bercerita dengan Oona
                     </button>
                   </div>
                 </div>
