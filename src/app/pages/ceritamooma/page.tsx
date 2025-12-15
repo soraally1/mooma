@@ -303,7 +303,7 @@ export default function ConsultationPage() {
                                     className={`w-44 h-44 lg:w-56 lg:h-56 object-contain transition-all duration-500 ${isSending ? 'animate-bounce-slow' : ''}`}
                                 />
                                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                                    <span className="px-4 py-1.5 rounded-full bg-[#EE6983] text-white text-sm font-bold shadow-lg">
+                                    <span className="px-3 py-1 lg:px-4 lg:py-1.5 rounded-full bg-[#EE6983] text-white text-xs lg:text-sm font-bold shadow-lg whitespace-nowrap">
                                         {isSending ? '💭 Mengetik...' : '💚 Online'}
                                     </span>
                                 </div>
