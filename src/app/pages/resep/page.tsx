@@ -715,34 +715,34 @@ export default function ResepPage() {
               </div>
             )}
 
-            <div className="flex gap-4 justify-between mt-12 pt-8 border-t border-gray-100">
+            <div className="flex flex-row gap-2 sm:gap-4 justify-between mt-12 pt-8 border-t border-gray-100">
               <button
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
-                className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-2 text-lg ${currentQuestion === 0
+                className={`px-3 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold transition-all flex items-center justify-center sm:justify-start gap-1 sm:gap-2 text-sm sm:text-lg ${currentQuestion === 0
                   ? 'opacity-0 pointer-events-none'
                   : 'text-gray-500 hover:text-[#B13455] hover:bg-[#FFF5E4]'
                   }`}
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
                 Kembali
               </button>
 
               {currentQuestion === questions.length - 1 ? (
                 <button
                   onClick={handleGenerateRecipes}
-                  className="px-10 py-4 rounded-2xl font-bold transition-all text-white bg-[#EE6983] hover:bg-[#D64D6B] hover:shadow-xl hover:-translate-y-1 flex items-center gap-3 text-lg shadow-lg"
+                  className="px-4 py-3 sm:px-10 sm:py-4 rounded-xl sm:rounded-2xl font-bold transition-all text-white bg-[#EE6983] hover:bg-[#D64D6B] hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-lg shadow-lg whitespace-nowrap"
                 >
                   Buat Resep Sekarang
-                  <Sparkles className="w-6 h-6" />
+                  <Sparkles className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
               ) : (
                 <button
                   onClick={handleNext}
-                  className="px-10 py-4 rounded-2xl font-bold transition-all text-white bg-[#B13455] hover:bg-[#9A2D49] hover:shadow-xl hover:-translate-y-1 flex items-center gap-3 text-lg shadow-lg"
+                  className="px-6 py-3 sm:px-10 sm:py-4 rounded-xl sm:rounded-2xl font-bold transition-all text-white bg-[#B13455] hover:bg-[#9A2D49] hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-lg shadow-lg"
                 >
                   Lanjut
-                  <ChevronRight className="w-6 h-6" />
+                  <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
               )}
             </div>
