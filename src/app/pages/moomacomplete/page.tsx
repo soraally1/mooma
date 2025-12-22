@@ -366,6 +366,29 @@ Untuk memulai, bolehkah saya tahu siapa nama Bunda dan berapa usianya saat ini?`
                 )}
               </button>
             </form>
+
+            {/* Helper Buttons - untuk antisipasi stuck */}
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setCompleted(true)}
+                disabled={loading || Object.keys(pregnancyData).length < 5}
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                title={`Tandai selesai dan tampilkan ringkasan data (minimal 5 data terisi: ${Object.keys(pregnancyData).length}/5)`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Selesaikan ({Object.keys(pregnancyData).length}/5)
+              </button>
+              <button
+                onClick={() => router.push('/pages/homepage')}
+                disabled={loading}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                title="Lewati dan lanjut ke halaman utama"
+              >
+                <ArrowRight className="w-4 h-4" />
+                Lanjutkan
+              </button>
+            </div>
+
             <p className="text-[10px] text-center text-gray-400 mt-3">
               Informasi ini akan membantu kami memberikan saran kesehatan yang lebih akurat
             </p>
