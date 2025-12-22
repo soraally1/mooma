@@ -269,22 +269,27 @@ export default function ProfilePage() {
           </div>
 
           {/* Health Metrics */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Tekanan darah - Full Width (Top Mobile) / Center (Desktop) */}
+            <div className="col-span-2 lg:col-span-1 order-1 lg:order-2 rounded-3xl p-6 text-center text-white shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 border-4 border-white" style={{ backgroundColor: '#EE6983' }}>
+              <p className="text-sm font-bold mb-3">Tekanan darah</p>
+              <p className="text-3xl lg:text-5xl font-black break-words">{pregnancyData.tekananDarah || '-'}</p>
+              <p className="text-sm font-bold mt-2">mmhg</p>
+            </div>
+
+            {/* Berat badan - Left (Bottom Mobile / First Desktop) */}
+            <div className="order-2 lg:order-1 rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-sm text-[#EE6983] font-bold mb-3">Berat badan</p>
-              <p className="text-5xl font-black text-[#EE6983]">
+              <p className="text-4xl lg:text-5xl font-black text-[#EE6983]">
                 {pregnancyData.beratBadanSaatIni || '-'}
               </p>
               <p className="text-sm text-[#EE6983] font-bold mt-2">kg</p>
             </div>
-            <div className="rounded-3xl p-6 text-center text-white shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 border-4 border-white" style={{ backgroundColor: '#EE6983' }}>
-              <p className="text-sm font-bold mb-3">Tekanan darah</p>
-              <p className="text-3xl lg:text-4xl font-black break-words">{pregnancyData.tekananDarah || '-'}</p>
-              <p className="text-sm font-bold mt-2">mmhg</p>
-            </div>
-            <div className="rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
+
+            {/* Usia Janin - Right (Bottom Mobile / Last Desktop) */}
+            <div className="order-3 lg:order-3 rounded-3xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ backgroundColor: '#FFF5E4' }}>
               <p className="text-sm text-[#EE6983] font-bold mb-3">Usia Janin</p>
-              <p className="text-5xl font-black text-[#EE6983]">
+              <p className="text-4xl lg:text-5xl font-black text-[#EE6983]">
                 {pregnancyMetrics?.pregnancyWeek || '-'}
               </p>
               <p className="text-sm text-[#EE6983] font-bold mt-2">minggu</p>

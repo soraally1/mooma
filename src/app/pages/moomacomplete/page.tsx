@@ -345,6 +345,7 @@ Untuk memulai, bolehkah saya tahu siapa nama Bunda dan berapa usianya saat ini?`
       {!completed && (
         <div className="bg-white/80 backdrop-blur-md border-t border-rose-100 p-4 lg:p-6">
           <div className="max-w-3xl mx-auto">
+<<<<<<< HEAD
             <form onSubmit={handleSendMessage} className="relative flex gap-3">
               <input
                 type="text"
@@ -392,6 +393,51 @@ Untuk memulai, bolehkah saya tahu siapa nama Bunda dan berapa usianya saat ini?`
             <p className="text-[10px] text-center text-gray-400 mt-3">
               Informasi ini akan membantu kami memberikan saran kesehatan yang lebih akurat
             </p>
+=======
+            <div className="flex flex-col gap-2">
+              <form onSubmit={handleSendMessage} className="relative flex gap-3">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ketik jawabanmu di sini..."
+                  disabled={loading}
+                  className="w-full pl-6 pr-14 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-100 transition-all text-gray-700 placeholder-gray-400"
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !input.trim()}
+                  className="absolute right-2 top-2 bottom-2 bg-rose-500 text-white aspect-square rounded-xl hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center shadow-md"
+                >
+                  {loading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </button>
+              </form>
+
+              {/* Manual Complete Button - Only shows when data is sufficient */}
+              {Object.keys(pregnancyData).filter(key => 
+                pregnancyData[key] !== undefined && 
+                pregnancyData[key] !== null && 
+                pregnancyData[key] !== '' && 
+                !['userId', 'updatedAt', 'completedAt', 'profileCompleted'].includes(key)
+              ).length >= 21 && (
+                <button
+                  onClick={() => setCompleted(true)}
+                  className="w-full py-2 px-4 bg-emerald-100 text-emerald-700 rounded-xl hover:bg-emerald-200 transition-colors text-sm font-semibold flex items-center justify-center gap-2 mt-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Data Sudah Lengkap? Selesaikan Sekarang
+                </button>
+              )}
+
+              <p className="text-[10px] text-center text-gray-400 mt-1">
+                Informasi ini akan membantu kami memberikan saran kesehatan yang lebih akurat
+              </p>
+            </div>
+>>>>>>> 43064743c3c1d3c0529162edc06f766d13d821bb
           </div>
         </div>
       )}
